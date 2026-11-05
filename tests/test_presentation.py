@@ -101,3 +101,4 @@ def test_theme_css_braces_balance():
     assert open_braces == close_braces, (
         f"Unbalanced braces in theme.css: {open_braces} open '{{' vs {close_braces} close '}}'"
     )
+
