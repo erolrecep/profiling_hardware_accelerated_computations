@@ -156,24 +156,53 @@ The repository provides concrete, formatted expected terminal logs for all profi
 
 ---
 
-### 📸 Visual Profiler Gallery: What to Expect When Replicating
+### 📸 Visual Profiler Gallery: Bad vs. Good Profiling Results (Before & After Optimization)
 
-To provide concrete visual guidance when replicating these benchmarks on your local workstation or cluster, here are reference snapshots of the profiler graphical interfaces:
+To provide concrete visual guidance when replicating these benchmarks on your local workstation or cluster, here are reference snapshots comparing the **Unoptimized (Bad)** versus **Optimized (Good)** results side-by-side:
 
-#### 1. Master Side-by-Side Comparison (Timeline vs. Micro-Kernel vs. Operator Graph)
+#### 1. Master Profiler Suite: Cross-Tool Correlation
 ![Side-by-Side Profiler Comparison](telemetry/snapshots/snapshot_side_by_side_comparison.png)
 
-#### 2. NVIDIA Nsight Systems (`nsys`): Macro Timeline GUI
-![NVIDIA Nsight Systems Timeline](telemetry/snapshots/snapshot_nsys_timeline.png)
-*Notice the prominent red `cudaStreamSynchronize` stall bar and white GPU starvation bubbles between kernel dispatches.*
+---
 
-#### 3. NVIDIA Nsight Compute (`ncu`): Micro-Kernel Dashboard
-![NVIDIA Nsight Compute Dashboard](telemetry/snapshots/snapshot_ncu_micro_dashboard.png)
-*Notice the critical red metric flagging **Warp Execution Efficiency at 14.28%** (27.5 idle threads per warp).*
+#### 2. NVIDIA Nsight Compute (`ncu`): Micro-Kernel Divergence (Bad vs. Good)
+![NVIDIA Nsight Compute Bad vs Good](telemetry/snapshots/snapshot_ncu_comparison.png)
 
-#### 4. PyTorch Profiler / Perfetto: Kineto Trace View
-![PyTorch Profiler Trace](telemetry/snapshots/snapshot_torch_profiler_trace.png)
-*Notice the massive red operator block representing **`aten::_local_scalar_dense` (265.4 ms)** blocking host CPU progress.*
+| Profiler Metric | 🔴 Unoptimized Naive Kernel | 🟢 Optimized 1D Grid-Stride | Improvement | Architectural Significance |
+| :--- | :---: | :---: | :---: | :--- |
+| **Kernel Duration** | 9.85 ms | 4.84 ms | **2.03x Faster** | Execution latency halved with identical mathematical output |
+| **Warp Execution Efficiency** | 14.28% | 68.42% | **+379%** | Active threads jump from 4.57 to 21.89 out of 32 per warp |
+| **SM Compute Throughput** | 12.45% | 74.80% | **6.0x Higher** | Silicon compute cores fully saturated rather than masked off |
+| **Issue Slots No Eligible** | 78.40% | 22.10% | **3.5x Drop** | SM warp schedulers find valid instructions almost every cycle |
+
+> **Architectural Discussion:** In SIMT execution, warps process 32 threads in lockstep. The naive 2D block allocates spatial neighbors to the same warp; when background pixels escape in 2 iterations, up to 30 execution units are masked off while 2 border pixels run 500 loops. The 1D grid-stride loop dynamically distributes unescaped pixels across threads, keeping warps continuously populated.
+
+---
+
+#### 3. PyTorch Profiler / Perfetto: Host-Device Synchronization Leak (Bad vs. Good)
+![PyTorch Profiler Bad vs Good](telemetry/snapshots/snapshot_torch_comparison.png)
+
+| Profiler Metric | 🔴 Naive Host Poll (`mask.any()`) | 🟢 Vectorized Pure GPU | Improvement | Architectural Significance |
+| :--- | :---: | :---: | :---: | :--- |
+| **Total CPU Wall Time** | 307.88 ms | 63.76 ms | **4.82x Faster** | CPU non-blocking dispatch keeps GPU saturated |
+| **`aten::_local_scalar_dense`** | 265.42 ms (86.2%) | 0.00 ms (0.0%) | **100% Eliminated** | Zero synchronous PCIe round-trips to CPU host |
+| **CUDA Compute Time** | 43.23 ms | 40.80 ms | Consistent | Pure math runtime is unchanged; pipeline stall is removed |
+| **GPU Duty Cycle** | ~14% (Choppy blips) | ~100% (Continuous) | Saturated | Command queue stays filled with asynchronous kernel launches |
+
+> **Architectural Discussion:** Evaluating `if not mask.any(): break` forces Python to retrieve a 1-byte boolean from GPU VRAM across PCIe to host RAM. This triggers an implicit `cudaStreamSynchronize`, draining the GPU command queue and idling hardware for 265 ms. Deleting this check lets all tensors remain on device, allowing asynchronous dispatch at native line-rate.
+
+---
+
+#### 4. NVIDIA Nsight Systems (`nsys`): Macro Timeline Pipelining (Bad vs. Good)
+![NVIDIA Nsight Systems Bad vs Good](telemetry/snapshots/snapshot_nsys_comparison.png)
+
+| Profiler Metric | 🔴 Synchronous Baseline | 🟢 Asynchronous Streams | Improvement | Architectural Significance |
+| :--- | :---: | :---: | :---: | :--- |
+| **Wall-Clock Duration** | 15.00 ms | 6.30 ms | **2.38x Faster** | Transfer latency hidden completely behind computation |
+| **Host Sync Overhead** | 68.4% of total time | 0.0% of total time | **100% Eliminated** | CPU immediately returns after queuing asynchronous tasks |
+| **GPU Idle Bubbles** | 55% of wall clock | 0.0% (Zero Bubbles) | **Full Overlap** | DMA copy engines and SM compute engines run concurrently |
+
+> **Architectural Discussion:** The GPU contains dedicated Direct Memory Access (DMA) copy engines operating independently of SM compute cores. Serial synchronous code executes them one after another, wasting more than half the wall clock. Pipelining memory copies across multiple CUDA streams achieves double-buffering and saturates hardware bandwidth.
 
 ---
 

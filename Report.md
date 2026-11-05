@@ -238,21 +238,24 @@ As high-performance computing clusters transition from **CUDA 12.x** (NVIDIA Hop
      $$\text{Nsight Systems (Macro-Timeline)} \longrightarrow \text{Nsight Compute (Micro-Kernel Counters)}$$
    - Concrete, annotated side-by-side terminal logs are provided in [`telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt`](telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt) and [`telemetry/expected_outputs/ncu_kernel_speed_of_light.txt`](telemetry/expected_outputs/ncu_kernel_speed_of_light.txt).
 
-### 4.5 Visual Profiler Gallery: Empirical GUI Artifacts
+### 4.5 Visual Profiler Gallery: Empirical GUI Artifacts (Bad vs. Good Comparison)
 
-To guide researchers and practitioners in identifying the exact visual patterns produced by each profiler, the empirical suite captures high-fidelity GUI artifacts:
+To guide researchers and practitioners in identifying the exact visual patterns produced by each profiler, the empirical suite captures high-fidelity GUI artifacts contrasting baseline bottlenecks with verified optimizations:
 
 #### Master Side-by-Side Comparison (nsys vs. ncu vs. PyTorch)
 ![Side-by-Side Profiler Comparison](telemetry/snapshots/snapshot_side_by_side_comparison.png)
 
-#### NVIDIA Nsight Systems Timeline (Macro View)
-![NVIDIA Nsight Systems Timeline](telemetry/snapshots/snapshot_nsys_timeline.png)
+#### NVIDIA Nsight Compute (`ncu`): Micro-Kernel Divergence (Bad vs. Good)
+![NVIDIA Nsight Compute Bad vs Good](telemetry/snapshots/snapshot_ncu_comparison.png)
+*Figure 4.1: Side-by-side Nsight Compute comparison of `mandelbrot_cuda_naive` vs `mandelbrot_cuda_grid_stride`. Warp efficiency surges from 14.28% to 68.42% (2.03x speedup) by eliminating SIMT warp masking.*
 
-#### NVIDIA Nsight Compute Micro-Kernel Dashboard
-![NVIDIA Nsight Compute Dashboard](telemetry/snapshots/snapshot_ncu_micro_dashboard.png)
+#### PyTorch Profiler / Perfetto: Host-Device Synchronization Leak (Bad vs. Good)
+![PyTorch Profiler Bad vs Good](telemetry/snapshots/snapshot_torch_comparison.png)
+*Figure 4.2: Side-by-side PyTorch Profiler trace comparison. Eliminating `if not mask.any(): break` completely expunges `aten::_local_scalar_dense` (265.4 ms stall), driving a 4.82x acceleration.*
 
-#### PyTorch Profiler / Perfetto Operator Trace
-![PyTorch Profiler Trace](telemetry/snapshots/snapshot_torch_profiler_trace.png)
+#### NVIDIA Nsight Systems (`nsys`): Macro Timeline Pipelining (Bad vs. Good)
+![NVIDIA Nsight Systems Bad vs Good](telemetry/snapshots/snapshot_nsys_comparison.png)
+*Figure 4.3: Side-by-side Nsight Systems timeline comparison. Pipelined asynchronous CUDA streams overlap PCIe memory transfers with compute, collapsing total duration from 15.0 ms to 6.3 ms.*
 
 ---
 

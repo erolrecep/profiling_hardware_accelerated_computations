@@ -347,19 +347,46 @@
               </p>
             </div>
           </div>
-          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view GUI Timeline Snapshot</p>
+          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view GUI Timeline Snapshot & Discussion</p>
           <aside class="notes">
             Nsight Systems shows you the big picture. If you see white gaps on the timeline, your GPU is idling while the CPU prepares data.
           </aside>
         </section>
         <section>
-          <span class="badge-pill">NVIDIA nsys GUI Snapshot</span>
+          <span class="badge-pill">NVIDIA nsys GUI: Bad vs. Good</span>
           <h2>Nsight Systems: Macro Timeline View</h2>
-          <h3>Host CPU vs. GPU Stream Execution & Starvation Gaps</h3>
-          <img src="images/snapshots/snapshot_nsys_timeline.png" class="slide-snapshot" alt="Nsight Systems Timeline Snapshot">
-          <p style="font-size: 0.72em; color: #cbd5e1;">
-            Notice the <strong>red host-sync stall bar</strong> and <strong>white GPU idle bubbles</strong> on Stream 1 between kernel dispatches.
+          <h3>Synchronous Stalls (15.0 ms) vs. Pipelined Asynchronous Overlap (6.3 ms)</h3>
+          <img src="images/snapshots/snapshot_nsys_comparison.png" class="slide-snapshot" alt="Nsight Systems Bad vs Good Timeline Snapshot">
+          <p style="font-size: 0.70em; color: #cbd5e1;">
+            Notice the <strong>red host-sync stall bar</strong> and <strong>white GPU idle bubbles</strong> in the baseline, completely resolved by stream concurrency.
           </p>
+        </section>
+        <section>
+          <span class="badge-pill">nsys Architectural Discussion</span>
+          <h2>Nsight Systems: Synchronous vs. Asynchronous Overlap</h2>
+          <h3>Why Memory Transfers Must Overlap Compute</h3>
+
+          <div class="side-by-side">
+            <div class="card-box" style="border-left: 4px solid #ef4444;">
+              <h4 style="color: #f87171;">🔴 The Flaw: Serial Synchronous Execution</h4>
+              <p>
+                • <strong>Root Cause:</strong> Calling blocking <code>cudaMemcpy</code> or <code>cudaStreamSynchronize</code> forces the CPU to wait until the GPU finishes.<br><br>
+                • <strong>Hardware Penalty:</strong> Modern GPUs have separate DMA copy engines and SM compute engines. Running serially wastes <strong>55% of total time</strong> while one engine sits idle waiting for the other.<br><br>
+                • <strong>Visual Indicator:</strong> Massive red horizontal API bars and white empty gaps between kernel runs on the timeline.
+              </p>
+            </div>
+            <div class="card-box" style="border-left: 4px solid #4ade80;">
+              <h4 style="color: #4ade80;">🟢 The Fix: Pipelined CUDA Streams</h4>
+              <p>
+                • <strong>Solution:</strong> Partition matrix data across independent CUDA streams with non-blocking <code>cudaMemcpyAsync</code>.<br><br>
+                • <strong>Hardware Saturation:</strong> While Stream 1 computes Chunk 0 on the SM cores, Stream 2 copies Chunk 1 across PCIe concurrently.<br><br>
+                • <strong>Measured Result:</strong> White idle bubbles completely vanish; wall-clock runtime collapses from 15.0 ms to 6.3 ms (<strong>2.38x speedup</strong>).
+              </p>
+            </div>
+          </div>
+          <aside class="notes">
+            Explain the hardware reality: DMA transfer engine vs SM compute engine. When you overlap them, memory transfer latency is completely hidden behind computation.
+          </aside>
         </section>
       </section>
 
@@ -395,19 +422,46 @@
               </p>
             </div>
           </div>
-          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view GUI Micro-Kernel Snapshot</p>
+          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view GUI Micro-Kernel Snapshot & Discussion</p>
           <aside class="notes">
             Nsight Compute tells you what happens inside the kernel. A low warp efficiency means branch divergence is wasting GPU cycles.
           </aside>
         </section>
         <section>
-          <span class="badge-pill">NVIDIA ncu GUI Snapshot</span>
-          <h2>Nsight Compute: Micro-Kernel Dashboard</h2>
-          <h3>Speed of Light (SOL) & Warp Execution Efficiency</h3>
-          <img src="images/snapshots/snapshot_ncu_micro_dashboard.png" class="slide-snapshot" alt="Nsight Compute Dashboard Snapshot">
-          <p style="font-size: 0.72em; color: #cbd5e1;">
-            The red warning bar flags <strong>Warp Execution Efficiency at 14.28%</strong> (only 4.5 active threads per warp).
+          <span class="badge-pill">NVIDIA ncu GUI: Bad vs. Good</span>
+          <h2>Nsight Compute: Before vs. After Optimization</h2>
+          <h3>Warp Efficiency: 14.28% (4.5 / 32) ➔ 68.42% (21.9 / 32) [2.03x Speedup]</h3>
+          <img src="images/snapshots/snapshot_ncu_comparison.png" class="slide-snapshot" alt="Nsight Compute Bad vs Good Comparison Snapshot">
+          <p style="font-size: 0.70em; color: #cbd5e1;">
+            Notice how 1D grid-stride loops dynamically redistribute unfinished pixels, quadrupling active threads and halving runtime.
           </p>
+        </section>
+        <section>
+          <span class="badge-pill">ncu Architectural Discussion</span>
+          <h2>Nsight Compute: 2D Block vs. 1D Grid-Stride</h2>
+          <h3>Why Workload Balancing Eliminates SIMT Thread Divergence</h3>
+
+          <div class="side-by-side">
+            <div class="card-box" style="border-left: 4px solid #ef4444;">
+              <h4 style="color: #f87171;">🔴 The Flaw: Static 2D Thread Blocks</h4>
+              <p>
+                • <strong>Root Cause:</strong> Assigning pixel coordinates directly to <code>(threadIdx.x, threadIdx.y)</code> groups spatial neighbors into 32-thread warps.<br><br>
+                • <strong>Hardware Penalty:</strong> Pixels outside the fractal escape in 2 iterations, while boundary pixels run 500 iterations. In lockstep SIMT execution, <strong>27.5 threads per warp sit masked off and idle</strong> every cycle.<br><br>
+                • <strong>Visual Indicator:</strong> Warp Execution Efficiency plummets to <strong>14.28%</strong>; SM throughput languishes at 12.4%.
+              </p>
+            </div>
+            <div class="card-box" style="border-left: 4px solid #4ade80;">
+              <h4 style="color: #4ade80;">🟢 The Fix: 1D Grid-Stride Loop</h4>
+              <p>
+                • <strong>Solution:</strong> Decouple thread counts from grid size: <code>for (int i = tid; i &lt; total; i += stride)</code>.<br><br>
+                • <strong>Hardware Saturation:</strong> As soon as a thread finishes an easy pixel, it immediately strides ahead to take the next uncomputed pixel, diffusing the divergent workload across warps.<br><br>
+                • <strong>Measured Result:</strong> Warp efficiency surges to <strong>68.42%</strong>, SM compute throughput jumps to 74.8%, and execution time drops from 9.85 ms to 4.84 ms (<strong>2.03x speedup</strong>).
+              </p>
+            </div>
+          </div>
+          <aside class="notes">
+            Emphasize that the math is 100% identical. The 2x speedup comes solely from balancing thread utilization across the 32-lane SIMT hardware.
+          </aside>
         </section>
       </section>
 
@@ -445,19 +499,46 @@
               </p>
             </div>
           </div>
-          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view Perfetto Timeline Snapshot</p>
+          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view Perfetto Timeline Snapshot & Discussion</p>
           <aside class="notes">
             PyTorch Profiler is the most accessible tool for AI developers. Finding aten::_local_scalar_dense is an instant lightbulb moment for attendees.
           </aside>
         </section>
         <section>
-          <span class="badge-pill">Perfetto / Chrome Trace Snapshot</span>
-          <h2>PyTorch Profiler: Kineto Trace View</h2>
-          <h3>Identifying the 86.2% Device-to-Host Host Stall</h3>
-          <img src="images/snapshots/snapshot_torch_profiler_trace.png" class="slide-snapshot" alt="PyTorch Profiler Trace Snapshot">
-          <p style="font-size: 0.72em; color: #cbd5e1;">
-            The massive red block highlights <strong>aten::_local_scalar_dense (265.4 ms)</strong> blocking CPU execution.
+          <span class="badge-pill">PyTorch Profiler GUI: Bad vs. Good</span>
+          <h2>PyTorch Profiler: Before vs. After Optimization</h2>
+          <h3>Host Sync Stalls: 86.2% (265.4 ms) ➔ 0.0% (Eliminated!) [4.82x Speedup]</h3>
+          <img src="images/snapshots/snapshot_torch_comparison.png" class="slide-snapshot" alt="PyTorch Profiler Bad vs Good Comparison Snapshot">
+          <p style="font-size: 0.70em; color: #cbd5e1;">
+            Notice how deleting the per-iteration host check completely eradicates <code>aten::_local_scalar_dense</code>, unlocking pure GPU acceleration.
           </p>
+        </section>
+        <section>
+          <span class="badge-pill">PyTorch Profiler Discussion</span>
+          <h2>PyTorch: Host-Device Sync Leak vs. Vectorization</h2>
+          <h3>Why A Single Python Check Destroys GPU Acceleration</h3>
+
+          <div class="side-by-side">
+            <div class="card-box" style="border-left: 4px solid #ef4444;">
+              <h4 style="color: #f87171;">🔴 The Flaw: Per-Iteration Host Polling</h4>
+              <p>
+                • <strong>Root Cause:</strong> Adding <code>if not mask.any(): break</code> inside the loop seems like a smart early-exit optimization.<br><br>
+                • <strong>Hardware Penalty:</strong> Evaluating a Python boolean requires transferring 1 byte from GPU VRAM across PCIe to CPU memory. This triggers an implicit <code>aten::_local_scalar_dense</code> synchronization on <strong>every single iteration</strong>.<br><br>
+                • <strong>Visual Indicator:</strong> CPU spends <strong>86.2% of its time (265.4 ms) stalled</strong>, starving the GPU queue and leaving the GPU 86% idle.
+              </p>
+            </div>
+            <div class="card-box" style="border-left: 4px solid #4ade80;">
+              <h4 style="color: #4ade80;">🟢 The Fix: Pure Tensorized Execution</h4>
+              <p>
+                • <strong>Solution:</strong> Delete the host check! Let intermediate convergence masks stay entirely in GPU high-bandwidth VRAM.<br><br>
+                • <strong>Hardware Saturation:</strong> PyTorch queues CUDA operators asynchronously. The CPU never stalls, and the GPU hardware pipeline stays 100% busy at line rate.<br><br>
+                • <strong>Measured Result:</strong> <code>_local_scalar_dense</code> vanishes (0.0 ms); total execution time plunges from 307.9 ms to 63.8 ms (<strong>4.82x speedup</strong>).
+              </p>
+            </div>
+          </div>
+          <aside class="notes">
+            This is the #1 mistake junior ML engineers make: putting .item() or scalar checks inside training/inference loops. Finding this in a profile is an immediate huge win.
+          </aside>
         </section>
       </section>
 
