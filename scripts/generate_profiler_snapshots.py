@@ -71,24 +71,24 @@ def draw_multiline(ax, x, y, text, width_chars=105, line_spacing=0.26, **kwargs)
 def generate_ncu_comparison(output_path):
     """
     Generates high-contrast side-by-side comparison of NCU Bad (Naive) vs Good (1D Grid-Stride)
-    with perfectly aligned progress bars, legible typography, and wrapped discussions.
+    in a clean, widescreen 16:7.2 frame focusing on kernel micro-architecture metrics.
     """
-    fig, ax = plt.subplots(figsize=(16, 9.5), dpi=180)
+    fig, ax = plt.subplots(figsize=(16, 7.2), dpi=180)
     ax.set_xlim(0, 16)
-    ax.set_ylim(0, 9.5)
+    ax.set_ylim(0, 7.2)
     ax.axis("off")
 
-    draw_window_frame(ax, title="NVIDIA Nsight Compute 2026.1 - Profiler Optimization Report: Bad vs. Good Kernels", width=16, height=9.5)
+    draw_window_frame(ax, title="NVIDIA Nsight Compute 2026.1 - Profiler Optimization Report: Bad vs. Good Kernels", width=16, height=7.2)
 
     # Sub-header bar
-    ax.add_patch(Rectangle((0, 8.25), 16, 0.60, facecolor="#151d2a", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(0.6, 8.55, "Workload: Mandelbrot 1024x1024 (500 max iterations)   |   Device: NVIDIA A100-SXM4-80GB (CC 8.0)",
+    ax.add_patch(Rectangle((0, 5.95), 16, 0.60, facecolor="#151d2a", edgecolor=BORDER_COL, linewidth=0.8))
+    ax.text(0.6, 6.25, "Workload: Mandelbrot 1024x1024 (500 max iterations)   |   Device: NVIDIA A100-SXM4-80GB (CC 8.0)",
             color=TEXT_WHITE, fontsize=10, fontweight="bold", va="center")
-    ax.text(15.4, 8.55, "Kernel Micro-Architecture Profiling", color=CYAN_BLUE, fontsize=10, fontweight="bold", ha="right", va="center")
+    ax.text(15.4, 6.25, "Kernel Micro-Architecture Profiling", color=CYAN_BLUE, fontsize=10, fontweight="bold", ha="right", va="center")
 
     col_w = 7.15
-    y_card = 2.40
-    h_card = 5.65
+    y_card = 0.40
+    h_card = 5.40
 
     # ==========================
     # LEFT CARD: BAD VERSION
@@ -97,17 +97,17 @@ def generate_ncu_comparison(output_path):
     ax.add_patch(FancyBboxPatch((x_bad, y_card), col_w, h_card, boxstyle="round,pad=0.0,rounding_size=0.14",
                                 facecolor=BG_PANEL, edgecolor=RED_ALERT, linewidth=1.8))
     # Header banner
-    ax.add_patch(FancyBboxPatch((x_bad, y_card + h_card - 0.75), col_w, 0.75, boxstyle="round,pad=0.0,rounding_size=0.0",
+    ax.add_patch(FancyBboxPatch((x_bad, y_card + h_card - 0.70), col_w, 0.70, boxstyle="round,pad=0.0,rounding_size=0.0",
                                 facecolor="#2a1215", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(x_bad + 0.35, y_card + h_card - 0.28, "[BEFORE: UNOPTIMIZED] mandelbrot_cuda_naive",
-            color=RED_ALERT, fontsize=11.5, fontweight="bold")
-    ax.text(x_bad + 0.35, y_card + h_card - 0.55, "Static 2D Thread Blocks [16, 16]   |   Duration: 9.85 ms",
-            color="#fca5a5", fontsize=9.5)
-    ax.text(x_bad + col_w - 0.35, y_card + h_card - 0.42, "BASELINE",
-            color=AMBER_WARN, fontsize=9.5, fontweight="bold", ha="right")
+    ax.text(x_bad + 0.35, y_card + h_card - 0.26, "[BEFORE: UNOPTIMIZED] mandelbrot_cuda_naive",
+            color=RED_ALERT, fontsize=11.0, fontweight="bold")
+    ax.text(x_bad + 0.35, y_card + h_card - 0.50, "Static 2D Thread Blocks [16, 16]   |   Duration: 9.85 ms",
+            color="#fca5a5", fontsize=9.0)
+    ax.text(x_bad + col_w - 0.35, y_card + h_card - 0.38, "BASELINE",
+            color=AMBER_WARN, fontsize=9.0, fontweight="bold", ha="right")
 
     # Section 1: SOL Bars
-    ax.text(x_bad + 0.35, y_card + h_card - 1.05, "GPU Speed of Light (SOL) Throughput", color=CYAN_BLUE, fontsize=10, fontweight="bold")
+    ax.text(x_bad + 0.35, y_card + h_card - 0.98, "GPU Speed of Light (SOL) Throughput", color=CYAN_BLUE, fontsize=9.5, fontweight="bold")
     bad_sol = [
         ("Compute (SM) Throughput", 12.45, RED_ALERT),
         ("DRAM Memory Throughput", 4.12, RED_ALERT),
@@ -115,37 +115,37 @@ def generate_ncu_comparison(output_path):
         ("L2 Cache Throughput", 7.80, RED_ALERT),
     ]
     for idx, (label, val, bar_color) in enumerate(bad_sol):
-        y = y_card + h_card - 1.45 - idx * 0.46
-        ax.text(x_bad + 0.35, y + 0.09, label, color=TEXT_WHITE, fontsize=9)
-        ax.text(x_bad + col_w - 0.35, y + 0.09, f"{val:.1f}%", color=bar_color, fontsize=9.5, fontweight="bold", ha="right")
+        y = y_card + h_card - 1.34 - idx * 0.42
+        ax.text(x_bad + 0.35, y + 0.08, label, color=TEXT_WHITE, fontsize=8.8)
+        ax.text(x_bad + col_w - 0.35, y + 0.08, f"{val:.1f}%", color=bar_color, fontsize=9.0, fontweight="bold", ha="right")
         # Bar track
-        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.16), col_w - 0.7, 0.18, facecolor="#1e2636", edgecolor="#334155"))
+        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.15), col_w - 0.7, 0.16, facecolor="#1e2636", edgecolor="#334155"))
         fill_w = (val / 100.0) * (col_w - 0.7)
-        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.16), fill_w, 0.18, facecolor=bar_color, edgecolor="none"))
+        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.15), fill_w, 0.16, facecolor=bar_color, edgecolor="none"))
 
     # Section 2: Warp Divergence Metrics
-    ax.text(x_bad + 0.35, y_card + 2.15, "Warp Execution & Scheduling Efficiency", color=RED_ALERT, fontsize=10, fontweight="bold")
+    ax.text(x_bad + 0.35, y_card + 2.45, "Warp Execution & Scheduling Efficiency", color=RED_ALERT, fontsize=9.5, fontweight="bold")
     bad_warp = [
         ("Warp Execution Efficiency", "14.28%", "CRITICAL (< 50%)", RED_ALERT, 14.28),
         ("Avg. Active Threads / Warp", "4.57 / 32", "27.4 idle threads", RED_ALERT, (4.57/32)*100),
         ("Issue Slots No Eligible", "78.40%", "Severe SM stalls", AMBER_WARN, 78.40),
     ]
     for idx, (label, val_str, note, col, fill_pct) in enumerate(bad_warp):
-        y = y_card + 1.75 - idx * 0.46
-        ax.text(x_bad + 0.35, y + 0.09, label, color=TEXT_WHITE, fontsize=9)
-        ax.text(x_bad + col_w - 0.35, y + 0.09, f"{val_str}  [{note}]", color=col, fontsize=9, fontweight="bold", ha="right")
-        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.16), col_w - 0.7, 0.18, facecolor="#1e2636", edgecolor="#334155"))
+        y = y_card + 2.08 - idx * 0.42
+        ax.text(x_bad + 0.35, y + 0.08, label, color=TEXT_WHITE, fontsize=8.8)
+        ax.text(x_bad + col_w - 0.35, y + 0.08, f"{val_str}  [{note}]", color=col, fontsize=8.8, fontweight="bold", ha="right")
+        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.15), col_w - 0.7, 0.16, facecolor="#1e2636", edgecolor="#334155"))
         fill_w = (fill_pct / 100.0) * (col_w - 0.7)
-        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.16), fill_w, 0.18, facecolor=col, edgecolor="none"))
+        ax.add_patch(Rectangle((x_bad + 0.35, y - 0.15), fill_w, 0.16, facecolor=col, edgecolor="none"))
 
     # Left Diagnostic Box
-    ax.add_patch(FancyBboxPatch((x_bad + 0.30, y_card + 0.15), col_w - 0.6, 0.65,
+    ax.add_patch(FancyBboxPatch((x_bad + 0.30, y_card + 0.15), col_w - 0.6, 0.60,
                                 boxstyle="round,pad=0.0,rounding_size=0.10",
                                 facecolor="#321417", edgecolor=RED_ALERT, linewidth=1.2))
-    ax.text(x_bad + 0.45, y_card + 0.54, "[!] SEVERE DIVERGENCE: 85.7% of SM execution units sit masked off!",
-            color="#fca5a5", fontsize=8.8, fontweight="bold")
-    ax.text(x_bad + 0.45, y_card + 0.28, "Fast outside pixels exit in 2 loops, idling execution units while border pixels run 500 loops.",
-            color="#cbd5e1", fontsize=8.2)
+    ax.text(x_bad + 0.45, y_card + 0.50, "[!] SEVERE DIVERGENCE: 85.7% of SM execution units sit masked off!",
+            color="#fca5a5", fontsize=8.5, fontweight="bold")
+    ax.text(x_bad + 0.45, y_card + 0.26, "Fast outside pixels exit in 2 loops, idling execution units while border pixels run 500 loops.",
+            color="#cbd5e1", fontsize=7.8)
 
     # ==========================
     # RIGHT CARD: GOOD VERSION
@@ -154,17 +154,17 @@ def generate_ncu_comparison(output_path):
     ax.add_patch(FancyBboxPatch((x_good, y_card), col_w, h_card, boxstyle="round,pad=0.0,rounding_size=0.14",
                                 facecolor=BG_PANEL, edgecolor=NVIDIA_GREEN, linewidth=1.8))
     # Header banner
-    ax.add_patch(FancyBboxPatch((x_good, y_card + h_card - 0.75), col_w, 0.75, boxstyle="round,pad=0.0,rounding_size=0.0",
+    ax.add_patch(FancyBboxPatch((x_good, y_card + h_card - 0.70), col_w, 0.70, boxstyle="round,pad=0.0,rounding_size=0.0",
                                 facecolor="#0e2417", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(x_good + 0.35, y_card + h_card - 0.28, "[AFTER: OPTIMIZED] mandelbrot_cuda_grid_stride",
-            color=NVIDIA_GREEN, fontsize=11.5, fontweight="bold")
-    ax.text(x_good + 0.35, y_card + h_card - 0.55, "1D Grid-Stride Loop (Dynamic Load)   |   Duration: 4.84 ms",
-            color="#86efac", fontsize=9.5)
-    ax.text(x_good + col_w - 0.35, y_card + h_card - 0.42, "2.03x FASTER",
-            color="#4ade80", fontsize=10, fontweight="bold", ha="right")
+    ax.text(x_good + 0.35, y_card + h_card - 0.26, "[AFTER: OPTIMIZED] mandelbrot_cuda_grid_stride",
+            color=NVIDIA_GREEN, fontsize=11.0, fontweight="bold")
+    ax.text(x_good + 0.35, y_card + h_card - 0.50, "1D Grid-Stride Loop (Dynamic Load)   |   Duration: 4.84 ms",
+            color="#86efac", fontsize=9.0)
+    ax.text(x_good + col_w - 0.35, y_card + h_card - 0.38, "2.03x FASTER",
+            color="#4ade80", fontsize=9.5, fontweight="bold", ha="right")
 
     # Section 1: SOL Bars
-    ax.text(x_good + 0.35, y_card + h_card - 1.05, "GPU Speed of Light (SOL) Throughput", color=CYAN_BLUE, fontsize=10, fontweight="bold")
+    ax.text(x_good + 0.35, y_card + h_card - 0.98, "GPU Speed of Light (SOL) Throughput", color=CYAN_BLUE, fontsize=9.5, fontweight="bold")
     good_sol = [
         ("Compute (SM) Throughput", 74.80, NVIDIA_GREEN),
         ("DRAM Memory Throughput", 18.40, CYAN_BLUE),
@@ -172,52 +172,36 @@ def generate_ncu_comparison(output_path):
         ("L2 Cache Throughput", 28.60, CYAN_BLUE),
     ]
     for idx, (label, val, bar_color) in enumerate(good_sol):
-        y = y_card + h_card - 1.45 - idx * 0.46
-        ax.text(x_good + 0.35, y + 0.09, label, color=TEXT_WHITE, fontsize=9)
-        ax.text(x_good + col_w - 0.35, y + 0.09, f"{val:.1f}% (+{val-bad_sol[idx][1]:.1f}%)", color=bar_color, fontsize=9.5, fontweight="bold", ha="right")
-        ax.add_patch(Rectangle((x_good + 0.35, y - 0.16), col_w - 0.7, 0.18, facecolor="#1e2636", edgecolor="#334155"))
+        y = y_card + h_card - 1.34 - idx * 0.42
+        ax.text(x_good + 0.35, y + 0.08, label, color=TEXT_WHITE, fontsize=8.8)
+        ax.text(x_good + col_w - 0.35, y + 0.08, f"{val:.1f}% (+{val-bad_sol[idx][1]:.1f}%)", color=bar_color, fontsize=9.0, fontweight="bold", ha="right")
+        ax.add_patch(Rectangle((x_good + 0.35, y - 0.15), col_w - 0.7, 0.16, facecolor="#1e2636", edgecolor="#334155"))
         fill_w = (val / 100.0) * (col_w - 0.7)
-        ax.add_patch(Rectangle((x_good + 0.35, y - 0.16), fill_w, 0.18, facecolor=bar_color, edgecolor="none"))
+        ax.add_patch(Rectangle((x_good + 0.35, y - 0.15), fill_w, 0.16, facecolor=bar_color, edgecolor="none"))
 
     # Section 2: Warp Divergence Metrics
-    ax.text(x_good + 0.35, y_card + 2.15, "Warp Execution & Scheduling Efficiency", color=NVIDIA_GREEN, fontsize=10, fontweight="bold")
+    ax.text(x_good + 0.35, y_card + 2.45, "Warp Execution & Scheduling Efficiency", color=NVIDIA_GREEN, fontsize=9.5, fontweight="bold")
     good_warp = [
         ("Warp Execution Efficiency", "68.42%", "HEALTHY (> 60%)", NVIDIA_GREEN, 68.42),
         ("Avg. Active Threads / Warp", "21.89 / 32", "Up from 4.57 (+378%)", NVIDIA_GREEN, (21.89/32)*100),
         ("Issue Slots No Eligible", "22.10%", "Stalls down by 3.5x", NVIDIA_GREEN, 22.10),
     ]
     for idx, (label, val_str, note, col, fill_pct) in enumerate(good_warp):
-        y = y_card + 1.75 - idx * 0.46
-        ax.text(x_good + 0.35, y + 0.09, label, color=TEXT_WHITE, fontsize=9)
-        ax.text(x_good + col_w - 0.35, y + 0.09, f"{val_str}  [{note}]", color=col, fontsize=9, fontweight="bold", ha="right")
-        ax.add_patch(Rectangle((x_good + 0.35, y - 0.16), col_w - 0.7, 0.18, facecolor="#1e2636", edgecolor="#334155"))
+        y = y_card + 2.08 - idx * 0.42
+        ax.text(x_good + 0.35, y + 0.08, label, color=TEXT_WHITE, fontsize=8.8)
+        ax.text(x_good + col_w - 0.35, y + 0.08, f"{val_str}  [{note}]", color=col, fontsize=8.8, fontweight="bold", ha="right")
+        ax.add_patch(Rectangle((x_good + 0.35, y - 0.15), col_w - 0.7, 0.16, facecolor="#1e2636", edgecolor="#334155"))
         fill_w = (fill_pct / 100.0) * (col_w - 0.7)
-        ax.add_patch(Rectangle((x_good + 0.35, y - 0.16), fill_w, 0.18, facecolor=col, edgecolor="none"))
+        ax.add_patch(Rectangle((x_good + 0.35, y - 0.15), fill_w, 0.16, facecolor=col, edgecolor="none"))
 
     # Right Diagnostic Box
-    ax.add_patch(FancyBboxPatch((x_good + 0.30, y_card + 0.15), col_w - 0.6, 0.65,
+    ax.add_patch(FancyBboxPatch((x_good + 0.30, y_card + 0.15), col_w - 0.6, 0.60,
                                 boxstyle="round,pad=0.0,rounding_size=0.10",
                                 facecolor="#0c2918", edgecolor=NVIDIA_GREEN, linewidth=1.2))
-    ax.text(x_good + 0.45, y_card + 0.54, "[*] HARDWARE SATURATION: Active threads surged from 4.5 to 21.9 / 32!",
-            color="#86efac", fontsize=8.8, fontweight="bold")
-    ax.text(x_good + 0.45, y_card + 0.28, "Grid-stride loop dynamically redistributes unfinished pixels; warp starvation is eliminated.",
-            color="#d1fae5", fontsize=8.2)
-
-    # ==========================
-    # BOTTOM DISCUSSION PANEL
-    # ==========================
-    ax.add_patch(FancyBboxPatch((0.6, 0.35), 14.8, 1.90, boxstyle="round,pad=0.0,rounding_size=0.12",
-                                facecolor="#121722", edgecolor=BORDER_COL, linewidth=1.4))
-    ax.text(0.9, 1.95, "[DISCUSSION] ARCHITECTURAL ANALYSIS: WHY DID THE 1D GRID-STRIDE OPTIMIZATION WORK?",
-            color=CYAN_BLUE, fontsize=10.5, fontweight="bold")
-
-    b1 = "• Failure Mechanism (Naive 2D): NVIDIA GPU SMs execute in lockstep 32-thread warps. Static 2D block mapping clusters adjacent pixels together. Outer pixels escape in 2-3 iterations while edge pixels take 500, forcing up to 30 threads per warp to mask off and sit idle, leaving hardware under-utilized."
-    b2 = "• Architectural Remedy (1D Grid-Stride): The 1D grid-stride loop decouples hardware thread counts from total problem dimensions. When a fast pixel escapes, that thread immediately strides ahead to grab the next uncomputed pixel, diffusing divergent workloads evenly across warps."
-    b3 = "• Verified Speedup: SM compute throughput surged 6.0x (12.5% -> 74.8%), warp execution efficiency quadrupled (14.3% -> 68.4%), and execution time halved (9.85 ms -> 4.84 ms) with 100% mathematical parity."
-
-    draw_multiline(ax, 0.9, 1.65, b1, width_chars=112, line_spacing=0.22, color="#cbd5e1", fontsize=8.5)
-    draw_multiline(ax, 0.9, 1.15, b2, width_chars=112, line_spacing=0.22, color="#cbd5e1", fontsize=8.5)
-    draw_multiline(ax, 0.9, 0.65, b3, width_chars=112, line_spacing=0.22, color=NVIDIA_GREEN, fontsize=8.8, fontweight="bold")
+    ax.text(x_good + 0.45, y_card + 0.50, "[*] HARDWARE SATURATION: Active threads surged from 4.5 to 21.9 / 32!",
+            color="#86efac", fontsize=8.5, fontweight="bold")
+    ax.text(x_good + 0.45, y_card + 0.26, "Grid-stride loop dynamically redistributes unfinished pixels; warp starvation is eliminated.",
+            color="#d1fae5", fontsize=7.8)
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=180, facecolor=BG_DARK, edgecolor="none")
@@ -231,24 +215,24 @@ def generate_ncu_comparison(output_path):
 def generate_torch_comparison(output_path):
     """
     Generates high-contrast side-by-side comparison of PyTorch Profiler Bad (Host Sync Leak) vs
-    Good (Pure GPU Vectorized) trace timelines, operator distributions, and architectural discussion.
+    Good (Pure GPU Vectorized) in a clean widescreen 16:7.2 frame focusing on operator distribution and timelines.
     """
-    fig, ax = plt.subplots(figsize=(16, 9.5), dpi=180)
+    fig, ax = plt.subplots(figsize=(16, 7.2), dpi=180)
     ax.set_xlim(0, 16)
-    ax.set_ylim(0, 9.5)
+    ax.set_ylim(0, 7.2)
     ax.axis("off")
 
-    draw_window_frame(ax, title="Perfetto UI / PyTorch Profiler - Optimization Report: Bad vs. Good Profiling Traces", width=16, height=9.5)
+    draw_window_frame(ax, title="Perfetto UI / PyTorch Profiler - Optimization Report: Bad vs. Good Profiling Traces", width=16, height=7.2)
 
     # Sub-header bar
-    ax.add_patch(Rectangle((0, 8.25), 16, 0.60, facecolor="#151d2a", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(0.6, 8.55, "Framework: PyTorch 2.6+ (Kineto Trace)   |   Device: cuda:0 / mps   |   Workload: 1024x1024 Mandelbrot Iterations",
+    ax.add_patch(Rectangle((0, 5.95), 16, 0.60, facecolor="#151d2a", edgecolor=BORDER_COL, linewidth=0.8))
+    ax.text(0.6, 6.25, "Framework: PyTorch 2.6+ (Kineto Trace)   |   Device: cuda:0 / mps   |   Workload: 1024x1024 Mandelbrot Iterations",
             color=TEXT_WHITE, fontsize=10, fontweight="bold", va="center")
-    ax.text(15.4, 8.55, "Operator Trace & Timeline Comparison", color=PURPLE_ACC, fontsize=10, fontweight="bold", ha="right", va="center")
+    ax.text(15.4, 6.25, "Operator Trace & Timeline Comparison", color=PURPLE_ACC, fontsize=10, fontweight="bold", ha="right", va="center")
 
     col_w = 7.15
-    y_card = 2.40
-    h_card = 5.65
+    y_card = 0.40
+    h_card = 5.40
 
     # ==========================
     # LEFT CARD: BAD VERSION
@@ -257,17 +241,17 @@ def generate_torch_comparison(output_path):
     ax.add_patch(FancyBboxPatch((x_bad, y_card), col_w, h_card, boxstyle="round,pad=0.0,rounding_size=0.14",
                                 facecolor=BG_PANEL, edgecolor=RED_ALERT, linewidth=1.8))
     # Header banner
-    ax.add_patch(FancyBboxPatch((x_bad, y_card + h_card - 0.75), col_w, 0.75, boxstyle="round,pad=0.0,rounding_size=0.0",
+    ax.add_patch(FancyBboxPatch((x_bad, y_card + h_card - 0.70), col_w, 0.70, boxstyle="round,pad=0.0,rounding_size=0.0",
                                 facecolor="#2a1215", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(x_bad + 0.35, y_card + h_card - 0.28, "[BEFORE: UNOPTIMIZED] mandelbrot_torch_naive",
-            color=RED_ALERT, fontsize=11.5, fontweight="bold")
-    ax.text(x_bad + 0.35, y_card + h_card - 0.55, "Loop with 'if not mask.any(): break'   |   Total CPU: 307.88 ms",
-            color="#fca5a5", fontsize=9.5)
-    ax.text(x_bad + col_w - 0.35, y_card + h_card - 0.42, "SYNC LEAK",
-            color=RED_ALERT, fontsize=9.5, fontweight="bold", ha="right")
+    ax.text(x_bad + 0.35, y_card + h_card - 0.26, "[BEFORE: UNOPTIMIZED] mandelbrot_torch_naive",
+            color=RED_ALERT, fontsize=11.0, fontweight="bold")
+    ax.text(x_bad + 0.35, y_card + h_card - 0.50, "Loop with 'if not mask.any(): break'   |   Total CPU: 307.88 ms",
+            color="#fca5a5", fontsize=9.0)
+    ax.text(x_bad + col_w - 0.35, y_card + h_card - 0.38, "SYNC LEAK",
+            color=RED_ALERT, fontsize=9.0, fontweight="bold", ha="right")
 
     # Section 1: Operator Breakdown Table
-    ax.text(x_bad + 0.35, y_card + h_card - 1.05, "Top Operator Self CPU Time Breakdown", color=CYAN_BLUE, fontsize=10, fontweight="bold")
+    ax.text(x_bad + 0.35, y_card + h_card - 0.98, "Top Operator Self CPU Time Breakdown", color=CYAN_BLUE, fontsize=9.5, fontweight="bold")
     bad_ops = [
         ("aten::_local_scalar_dense", "265.42 ms", "86.21%", RED_ALERT),
         ("aten::where", "12.69 ms", "4.12%", CYAN_BLUE),
@@ -276,37 +260,37 @@ def generate_torch_comparison(output_path):
         ("Self CUDA Compute Time", "43.23 ms", "14.0% Total", AMBER_WARN),
     ]
     for idx, (op_name, time_str, pct_str, col) in enumerate(bad_ops):
-        y = y_card + h_card - 1.45 - idx * 0.42
-        ax.text(x_bad + 0.35, y, op_name, color=TEXT_WHITE, fontsize=9, family="monospace")
-        ax.text(x_bad + 4.6, y, time_str, color=TEXT_WHITE, fontsize=9)
-        ax.text(x_bad + col_w - 0.35, y, pct_str, color=col, fontsize=9.2, fontweight="bold", ha="right")
+        y = y_card + h_card - 1.34 - idx * 0.38
+        ax.text(x_bad + 0.35, y, op_name, color=TEXT_WHITE, fontsize=8.6, family="monospace")
+        ax.text(x_bad + 4.6, y, time_str, color=TEXT_WHITE, fontsize=8.6)
+        ax.text(x_bad + col_w - 0.35, y, pct_str, color=col, fontsize=8.8, fontweight="bold", ha="right")
 
     # Section 2: Visual Timeline Mockup (THE STALL)
-    ax.text(x_bad + 0.35, y_card + 2.05, "Perfetto Visual Timeline: CPU Stalled on Host Sync", color=RED_ALERT, fontsize=10, fontweight="bold")
+    ax.text(x_bad + 0.35, y_card + 2.30, "Perfetto Visual Timeline: CPU Stalled on Host Sync", color=RED_ALERT, fontsize=9.5, fontweight="bold")
     # CPU Track
-    ax.add_patch(Rectangle((x_bad + 0.35, y_card + 1.45), col_w - 0.7, 0.45, facecolor=BG_TRACK, edgecolor=BORDER_COL))
-    ax.add_patch(Rectangle((x_bad + 0.55, y_card + 1.50), col_w - 1.1, 0.35, facecolor=RED_ALERT, edgecolor="#b91c1c"))
-    ax.text(x_bad + col_w / 2, y_card + 1.67, "aten::_local_scalar_dense [265.4 ms Host Stall]",
-            color="#fff", fontsize=8.5, fontweight="bold", ha="center", va="center")
+    ax.add_patch(Rectangle((x_bad + 0.35, y_card + 1.70), col_w - 0.7, 0.42, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((x_bad + 0.55, y_card + 1.75), col_w - 1.1, 0.32, facecolor=RED_ALERT, edgecolor="#b91c1c"))
+    ax.text(x_bad + col_w / 2, y_card + 1.91, "aten::_local_scalar_dense [265.4 ms Host Stall]",
+            color="#fff", fontsize=8.2, fontweight="bold", ha="center", va="center")
 
     # GPU Stream Track (Starved)
-    ax.add_patch(Rectangle((x_bad + 0.35, y_card + 0.85), col_w - 0.7, 0.45, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((x_bad + 0.35, y_card + 1.15), col_w - 0.7, 0.42, facecolor=BG_TRACK, edgecolor=BORDER_COL))
     for k in range(5):
         gx = x_bad + 0.65 + k * 1.25
-        ax.add_patch(Rectangle((gx, y_card + 0.90), 0.28, 0.35, facecolor=NVIDIA_GREEN))
-        ax.text(gx + 0.14, y_card + 1.07, "op", color="#000", fontsize=7, ha="center", va="center")
+        ax.add_patch(Rectangle((gx, y_card + 1.20), 0.28, 0.32, facecolor=NVIDIA_GREEN))
+        ax.text(gx + 0.14, y_card + 1.36, "op", color="#000", fontsize=6.8, ha="center", va="center")
         if k < 4:
-            ax.add_patch(Rectangle((gx + 0.32, y_card + 0.92), 0.90, 0.31, facecolor="none", edgecolor=RED_ALERT, linestyle="--", linewidth=1.2))
-            ax.text(gx + 0.77, y_card + 1.07, "IDLE", color=RED_ALERT, fontsize=7, fontweight="bold", ha="center", va="center")
+            ax.add_patch(Rectangle((gx + 0.32, y_card + 1.22), 0.90, 0.28, facecolor="none", edgecolor=RED_ALERT, linestyle="--", linewidth=1.2))
+            ax.text(gx + 0.77, y_card + 1.36, "IDLE", color=RED_ALERT, fontsize=6.8, fontweight="bold", ha="center", va="center")
 
     # Left Diagnostic Box
-    ax.add_patch(FancyBboxPatch((x_bad + 0.30, y_card + 0.12), col_w - 0.6, 0.60,
+    ax.add_patch(FancyBboxPatch((x_bad + 0.30, y_card + 0.15), col_w - 0.6, 0.60,
                                 boxstyle="round,pad=0.0,rounding_size=0.10",
                                 facecolor="#321417", edgecolor=RED_ALERT, linewidth=1.2))
-    ax.text(x_bad + 0.45, y_card + 0.48, "[!] HOST SYNC LEAK: 86.2% of runtime spent waiting for PCIe read!",
-            color="#fca5a5", fontsize=8.8, fontweight="bold")
-    ax.text(x_bad + 0.45, y_card + 0.24, "'if not mask.any(): break' pulls 1 boolean byte back to CPU every loop, flushing the GPU queue.",
-            color="#cbd5e1", fontsize=8.0)
+    ax.text(x_bad + 0.45, y_card + 0.50, "[!] HOST SYNC LEAK: 86.2% of runtime spent waiting for PCIe read!",
+            color="#fca5a5", fontsize=8.5, fontweight="bold")
+    ax.text(x_bad + 0.45, y_card + 0.26, "'if not mask.any(): break' pulls 1 boolean byte back to CPU every loop, flushing the GPU queue.",
+            color="#cbd5e1", fontsize=7.8)
 
     # ==========================
     # RIGHT CARD: GOOD VERSION
@@ -315,17 +299,17 @@ def generate_torch_comparison(output_path):
     ax.add_patch(FancyBboxPatch((x_good, y_card), col_w, h_card, boxstyle="round,pad=0.0,rounding_size=0.14",
                                 facecolor=BG_PANEL, edgecolor=NVIDIA_GREEN, linewidth=1.8))
     # Header banner
-    ax.add_patch(FancyBboxPatch((x_good, y_card + h_card - 0.75), col_w, 0.75, boxstyle="round,pad=0.0,rounding_size=0.0",
+    ax.add_patch(FancyBboxPatch((x_good, y_card + h_card - 0.70), col_w, 0.70, boxstyle="round,pad=0.0,rounding_size=0.0",
                                 facecolor="#0e2417", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(x_good + 0.35, y_card + h_card - 0.28, "[AFTER: OPTIMIZED] mandelbrot_torch_vectorized",
-            color=NVIDIA_GREEN, fontsize=11.5, fontweight="bold")
-    ax.text(x_good + 0.35, y_card + h_card - 0.55, "Intermediate Tensors on Device VRAM   |   Total CPU: 63.76 ms",
-            color="#86efac", fontsize=9.5)
-    ax.text(x_good + col_w - 0.35, y_card + h_card - 0.42, "4.82x FASTER",
-            color="#4ade80", fontsize=10, fontweight="bold", ha="right")
+    ax.text(x_good + 0.35, y_card + h_card - 0.26, "[AFTER: OPTIMIZED] mandelbrot_torch_vectorized",
+            color=NVIDIA_GREEN, fontsize=11.0, fontweight="bold")
+    ax.text(x_good + 0.35, y_card + h_card - 0.50, "Intermediate Tensors on Device VRAM   |   Total CPU: 63.76 ms",
+            color="#86efac", fontsize=9.0)
+    ax.text(x_good + col_w - 0.35, y_card + h_card - 0.38, "4.82x FASTER",
+            color="#4ade80", fontsize=9.5, fontweight="bold", ha="right")
 
     # Section 1: Operator Breakdown Table
-    ax.text(x_good + 0.35, y_card + h_card - 1.05, "Top Operator Self CPU Time Breakdown", color=CYAN_BLUE, fontsize=10, fontweight="bold")
+    ax.text(x_good + 0.35, y_card + h_card - 0.98, "Top Operator Self CPU Time Breakdown", color=CYAN_BLUE, fontsize=9.5, fontweight="bold")
     good_ops = [
         ("aten::_local_scalar_dense", "0.00 ms", "0.00% (ELIMINATED!)", NVIDIA_GREEN),
         ("aten::where", "26.27 ms", "41.20%", CYAN_BLUE),
@@ -334,50 +318,34 @@ def generate_torch_comparison(output_path):
         ("Self CUDA Compute Time", "40.80 ms", "64.0% Total", NVIDIA_GREEN),
     ]
     for idx, (op_name, time_str, pct_str, col) in enumerate(good_ops):
-        y = y_card + h_card - 1.45 - idx * 0.42
-        ax.text(x_good + 0.35, y, op_name, color=TEXT_WHITE, fontsize=9, family="monospace")
-        ax.text(x_good + 4.6, y, time_str, color=TEXT_WHITE, fontsize=9)
-        ax.text(x_good + col_w - 0.35, y, pct_str, color=col, fontsize=9.2, fontweight="bold", ha="right")
+        y = y_card + h_card - 1.34 - idx * 0.38
+        ax.text(x_good + 0.35, y, op_name, color=TEXT_WHITE, fontsize=8.6, family="monospace")
+        ax.text(x_good + 4.6, y, time_str, color=TEXT_WHITE, fontsize=8.6)
+        ax.text(x_good + col_w - 0.35, y, pct_str, color=col, fontsize=8.8, fontweight="bold", ha="right")
 
     # Section 2: Visual Timeline Mockup (THE FIX)
-    ax.text(x_good + 0.35, y_card + 2.05, "Perfetto Visual Timeline: Continuous Pipelined Execution", color=NVIDIA_GREEN, fontsize=10, fontweight="bold")
+    ax.text(x_good + 0.35, y_card + 2.30, "Perfetto Visual Timeline: Continuous Pipelined Execution", color=NVIDIA_GREEN, fontsize=9.5, fontweight="bold")
     # CPU Track
-    ax.add_patch(Rectangle((x_good + 0.35, y_card + 1.45), col_w - 0.7, 0.45, facecolor=BG_TRACK, edgecolor=BORDER_COL))
-    ax.add_patch(Rectangle((x_good + 0.55, y_card + 1.50), col_w - 1.1, 0.35, facecolor="#4c1d95", edgecolor="#6d28d9"))
-    ax.text(x_good + col_w / 2, y_card + 1.67, "PyTorch Asynchronous Dispatcher (Non-Blocking CPU)",
-            color="#fff", fontsize=8.5, fontweight="bold", ha="center", va="center")
+    ax.add_patch(Rectangle((x_good + 0.35, y_card + 1.70), col_w - 0.7, 0.42, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((x_good + 0.55, y_card + 1.75), col_w - 1.1, 0.32, facecolor="#4c1d95", edgecolor="#6d28d9"))
+    ax.text(x_good + col_w / 2, y_card + 1.91, "PyTorch Asynchronous Dispatcher (Non-Blocking CPU)",
+            color="#fff", fontsize=8.2, fontweight="bold", ha="center", va="center")
 
     # GPU Stream Track (Continuous)
-    ax.add_patch(Rectangle((x_good + 0.35, y_card + 0.85), col_w - 0.7, 0.45, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((x_good + 0.35, y_card + 1.15), col_w - 0.7, 0.42, facecolor=BG_TRACK, edgecolor=BORDER_COL))
     for k in range(12):
         gx = x_good + 0.45 + k * 0.52
-        ax.add_patch(Rectangle((gx, y_card + 0.90), 0.48, 0.35, facecolor=NVIDIA_GREEN, edgecolor="#15803d"))
-        ax.text(gx + 0.24, y_card + 1.07, "gpu", color="#000", fontsize=6.8, ha="center", va="center")
+        ax.add_patch(Rectangle((gx, y_card + 1.20), 0.48, 0.32, facecolor=NVIDIA_GREEN, edgecolor="#15803d"))
+        ax.text(gx + 0.24, y_card + 1.36, "gpu", color="#000", fontsize=6.8, ha="center", va="center")
 
     # Right Diagnostic Box
-    ax.add_patch(FancyBboxPatch((x_good + 0.30, y_card + 0.12), col_w - 0.6, 0.60,
+    ax.add_patch(FancyBboxPatch((x_good + 0.30, y_card + 0.15), col_w - 0.6, 0.60,
                                 boxstyle="round,pad=0.0,rounding_size=0.10",
                                 facecolor="#0c2918", edgecolor=NVIDIA_GREEN, linewidth=1.2))
-    ax.text(x_good + 0.45, y_card + 0.48, "[*] ASYNCHRONOUS PIPELINE: Zero host stalls; GPU duty cycle 100%!",
-            color="#86efac", fontsize=8.8, fontweight="bold")
-    ax.text(x_good + 0.45, y_card + 0.24, "All tensor operations stay on GPU VRAM. CUDA queue executes at full line-rate.",
-            color="#d1fae5", fontsize=8.0)
-
-    # ==========================
-    # BOTTOM DISCUSSION PANEL
-    # ==========================
-    ax.add_patch(FancyBboxPatch((0.6, 0.35), 14.8, 1.90, boxstyle="round,pad=0.0,rounding_size=0.12",
-                                facecolor="#121722", edgecolor=BORDER_COL, linewidth=1.4))
-    ax.text(0.9, 1.95, "[DISCUSSION] ARCHITECTURAL ANALYSIS: WHY DID ELIMINATING THE HOST CHECK WORK?",
-            color=CYAN_BLUE, fontsize=10.5, fontweight="bold")
-
-    b1 = "• Failure Mechanism (Device-to-Host Sync Trap): In PyTorch, GPU operators are non-blocking; the CPU places operations on a CUDA stream and returns immediately. But calling .item(), tensor.any(), or float() requires the CPU to know the actual value. This triggers an implicit synchronization (aten::_local_scalar_dense), forcing the CPU to stall while the GPU flushes its pipeline across PCIe."
-    b2 = "• Architectural Remedy (Pure Vectorized GPU Execution): By removing the per-iteration host convergence poll and letting all intermediate masks remain on GPU memory, the CPU continuously feeds the GPU queue. Asynchronous kernel dispatch proceeds uninterrupted at native silicon line-rate."
-    b3 = "• Verified Speedup: aten::_local_scalar_dense was completely eliminated (265.4 ms -> 0.00 ms). Total execution time plunged from 307.9 ms to 63.8 ms (a 4.82x speedup) achieved by deleting a single line of host-side checking code!"
-
-    draw_multiline(ax, 0.9, 1.65, b1, width_chars=112, line_spacing=0.22, color="#cbd5e1", fontsize=8.5)
-    draw_multiline(ax, 0.9, 1.15, b2, width_chars=112, line_spacing=0.22, color="#cbd5e1", fontsize=8.5)
-    draw_multiline(ax, 0.9, 0.65, b3, width_chars=112, line_spacing=0.22, color=NVIDIA_GREEN, fontsize=8.8, fontweight="bold")
+    ax.text(x_good + 0.45, y_card + 0.50, "[*] ASYNCHRONOUS PIPELINE: Zero host stalls; GPU duty cycle 100%!",
+            color="#86efac", fontsize=8.5, fontweight="bold")
+    ax.text(x_good + 0.45, y_card + 0.26, "All tensor operations stay on GPU VRAM. CUDA queue executes at full line-rate.",
+            color="#d1fae5", fontsize=7.8)
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=180, facecolor=BG_DARK, edgecolor="none")
@@ -391,132 +359,119 @@ def generate_torch_comparison(output_path):
 def generate_nsys_comparison(output_path):
     """
     Generates high-contrast side-by-side comparison of NVIDIA Nsight Systems:
-    Bad (Synchronous serialization & GPU starvation) vs Good (Asynchronous stream pipelining & overlap).
+    Bad (Synchronous serialization & GPU starvation) vs Good (Asynchronous stream pipelining & overlap)
+    in a clean, widescreen 16:7.2 frame focusing on timeline concurrency.
     """
-    fig, ax = plt.subplots(figsize=(16, 9.5), dpi=180)
+    fig, ax = plt.subplots(figsize=(16, 7.2), dpi=180)
     ax.set_xlim(0, 16)
-    ax.set_ylim(0, 9.5)
+    ax.set_ylim(0, 7.2)
     ax.axis("off")
 
-    draw_window_frame(ax, title="NVIDIA Nsight Systems 2026.1 - System Timeline: Bad vs. Good Profiling Results", width=16, height=9.5)
+    draw_window_frame(ax, title="NVIDIA Nsight Systems 2026.1 - System Timeline: Bad vs. Good Profiling Results", width=16, height=7.2)
 
     # Sub-header bar
-    ax.add_patch(Rectangle((0, 8.25), 16, 0.60, facecolor="#151d2a", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(0.6, 8.55, "Macro System Timeline: CUDA API Calls, PCIe Transfers (H2D/D2H), and GPU Compute Streams",
+    ax.add_patch(Rectangle((0, 5.95), 16, 0.60, facecolor="#151d2a", edgecolor=BORDER_COL, linewidth=0.8))
+    ax.text(0.6, 6.25, "Macro System Timeline: CUDA API Calls, PCIe Transfers (H2D/D2H), and GPU Compute Streams",
             color=TEXT_WHITE, fontsize=10, fontweight="bold", va="center")
-    ax.text(15.4, 8.55, "Stream Concurrency & Overlap Analysis", color=NVIDIA_GREEN, fontsize=10, fontweight="bold", ha="right", va="center")
+    ax.text(15.4, 6.25, "Stream Concurrency & Overlap Analysis", color=NVIDIA_GREEN, fontsize=10, fontweight="bold", ha="right", va="center")
 
     # ==========================
     # TOP CARD: BAD VERSION (SYNCHRONOUS)
     # ==========================
-    ax.add_patch(FancyBboxPatch((0.6, 5.25), 14.8, 2.90, boxstyle="round,pad=0.0,rounding_size=0.12",
+    ax.add_patch(FancyBboxPatch((0.6, 3.35), 14.8, 2.50, boxstyle="round,pad=0.0,rounding_size=0.12",
                                 facecolor=BG_PANEL, edgecolor=RED_ALERT, linewidth=1.6))
-    ax.add_patch(FancyBboxPatch((0.6, 7.55), 14.8, 0.60, boxstyle="round,pad=0.0,rounding_size=0.0",
+    ax.add_patch(FancyBboxPatch((0.6, 5.30), 14.8, 0.55, boxstyle="round,pad=0.0,rounding_size=0.0",
                                 facecolor="#2a1215", edgecolor=BORDER_COL, linewidth=0.6))
-    ax.text(0.9, 7.85, "[BEFORE: UNOPTIMIZED] Synchronous Execution (cudaStreamSynchronize Stalls & GPU Starvation)",
+    ax.text(0.9, 5.57, "[BEFORE: UNOPTIMIZED] Synchronous Execution (cudaStreamSynchronize Stalls & GPU Starvation)",
             color=RED_ALERT, fontsize=10.5, fontweight="bold")
-    ax.text(15.1, 7.85, "WALL TIME: 15.0 ms   |   HOST STALL: 68.4%   |   GPU IDLE: 55%",
+    ax.text(15.1, 5.57, "WALL TIME: 15.0 ms   |   HOST STALL: 68.4%   |   GPU IDLE: 55%",
             color="#fca5a5", fontsize=9, fontweight="bold", ha="right")
 
     # Bad Tracks
     # 1. CPU API Track
-    ax.add_patch(Rectangle((0.9, 6.85), 2.6, 0.52, facecolor="#1a2332", edgecolor=BORDER_COL))
-    ax.text(1.0, 7.11, "CUDA API (Host)", color=CYAN_BLUE, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((3.7, 6.85), 11.4, 0.52, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((0.9, 4.65), 2.6, 0.48, facecolor="#1a2332", edgecolor=BORDER_COL))
+    ax.text(1.0, 4.89, "CUDA API (Host)", color=CYAN_BLUE, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((3.7, 4.65), 11.4, 0.48, facecolor=BG_TRACK, edgecolor=BORDER_COL))
 
-    ax.add_patch(Rectangle((3.9, 6.92), 1.2, 0.38, facecolor=AMBER_WARN))
-    ax.text(4.5, 7.11, "cudaMemcpy", color="#000", fontsize=7.5, fontweight="bold", ha="center")
+    ax.add_patch(Rectangle((3.9, 4.71), 1.2, 0.36, facecolor=AMBER_WARN))
+    ax.text(4.5, 4.89, "cudaMemcpy", color="#000", fontsize=7.5, fontweight="bold", ha="center")
 
-    ax.add_patch(Rectangle((5.3, 6.92), 6.5, 0.38, facecolor=RED_ALERT))
-    ax.text(8.55, 7.11, "cudaStreamSynchronize()  [STALL: 68.4% Host Time - CPU BLOCKED]",
+    ax.add_patch(Rectangle((5.3, 4.71), 6.5, 0.36, facecolor=RED_ALERT))
+    ax.text(8.55, 4.89, "cudaStreamSynchronize()  [STALL: 68.4% Host Time - CPU BLOCKED]",
             color="#fff", fontsize=8.5, fontweight="bold", ha="center")
 
     # 2. GPU Stream Track
-    ax.add_patch(Rectangle((0.9, 6.15), 2.6, 0.52, facecolor="#1a2332", edgecolor=BORDER_COL))
-    ax.text(1.0, 6.41, "GPU Stream 1", color=NVIDIA_GREEN, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((3.7, 6.15), 11.4, 0.52, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((0.9, 4.00), 2.6, 0.48, facecolor="#1a2332", edgecolor=BORDER_COL))
+    ax.text(1.0, 4.24, "GPU Stream 1", color=NVIDIA_GREEN, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((3.7, 4.00), 11.4, 0.48, facecolor=BG_TRACK, edgecolor=BORDER_COL))
 
-    ax.add_patch(Rectangle((3.9, 6.22), 1.2, 0.38, facecolor=MEMCPY_ORANGE))
-    ax.text(4.5, 6.41, "[H2D Copy]", color="#fff", fontsize=7.5, ha="center")
+    ax.add_patch(Rectangle((3.9, 4.06), 1.2, 0.36, facecolor=MEMCPY_ORANGE))
+    ax.text(4.5, 4.24, "[H2D Copy]", color="#fff", fontsize=7.5, ha="center")
 
-    ax.add_patch(Rectangle((5.4, 6.22), 1.8, 0.38, facecolor=KERNEL_BLUE))
-    ax.text(6.3, 6.41, "gemm_naive", color="#fff", fontsize=8, fontweight="bold", ha="center")
+    ax.add_patch(Rectangle((5.4, 4.06), 1.8, 0.36, facecolor=KERNEL_BLUE))
+    ax.text(6.3, 4.24, "gemm_naive", color="#fff", fontsize=8, fontweight="bold", ha="center")
 
     # White Idle Gap
-    ax.add_patch(Rectangle((7.4, 6.22), 4.2, 0.38, facecolor="none", edgecolor=RED_ALERT, linestyle="--", linewidth=1.5))
-    ax.text(9.5, 6.41, "WHITE IDLE BUBBLE: GPU Sits Starved Waiting for Next Batch",
+    ax.add_patch(Rectangle((7.4, 4.06), 4.2, 0.36, facecolor="none", edgecolor=RED_ALERT, linestyle="--", linewidth=1.5))
+    ax.text(9.5, 4.24, "WHITE IDLE BUBBLE: GPU Sits Starved Waiting for Next Batch",
             color=RED_ALERT, fontsize=8, fontweight="bold", ha="center")
 
-    ax.add_patch(Rectangle((11.8, 6.22), 1.0, 0.38, facecolor=MEMCPY_ORANGE))
-    ax.text(12.3, 6.41, "[D2H Copy]", color="#fff", fontsize=7.5, ha="center")
+    ax.add_patch(Rectangle((11.8, 4.06), 1.0, 0.36, facecolor=MEMCPY_ORANGE))
+    ax.text(12.3, 4.24, "[D2H Copy]", color="#fff", fontsize=7.5, ha="center")
 
-    ax.text(0.9, 5.42, "[!] Bottleneck: Serial pipeline. CPU cannot launch next work until previous completes; GPU sits completely idle 55% of total elapsed time.",
-            color="#fca5a5", fontsize=8.2)
+    ax.text(0.9, 3.48, "[!] Bottleneck: Serial pipeline. CPU cannot launch next work until previous completes; GPU sits completely idle 55% of total elapsed time.",
+            color="#fca5a5", fontsize=8.0)
 
     # ==========================
     # BOTTOM CARD: GOOD VERSION (PIPELINED STREAMS)
     # ==========================
-    ax.add_patch(FancyBboxPatch((0.6, 2.25), 14.8, 2.85, boxstyle="round,pad=0.0,rounding_size=0.12",
+    ax.add_patch(FancyBboxPatch((0.6, 0.40), 14.8, 2.75, boxstyle="round,pad=0.0,rounding_size=0.12",
                                 facecolor=BG_PANEL, edgecolor=NVIDIA_GREEN, linewidth=1.6))
-    ax.add_patch(FancyBboxPatch((0.6, 4.50), 14.8, 0.60, boxstyle="round,pad=0.0,rounding_size=0.0",
+    ax.add_patch(FancyBboxPatch((0.6, 2.60), 14.8, 0.55, boxstyle="round,pad=0.0,rounding_size=0.0",
                                 facecolor="#0e2417", edgecolor=BORDER_COL, linewidth=0.6))
-    ax.text(0.9, 4.80, "[AFTER: OPTIMIZED] Pipelined Asynchronous Streams (Concurrent Transfer & Compute Overlap)",
+    ax.text(0.9, 2.87, "[AFTER: OPTIMIZED] Pipelined Asynchronous Streams (Concurrent Transfer & Compute Overlap)",
             color=NVIDIA_GREEN, fontsize=10.5, fontweight="bold")
-    ax.text(15.1, 4.80, "WALL TIME: 6.3 ms  [2.38x FASTER]   |   HOST STALL: 0.0%   |   GPU IDLE: 0%",
+    ax.text(15.1, 2.87, "WALL TIME: 6.3 ms  [2.38x FASTER]   |   HOST STALL: 0.0%   |   GPU IDLE: 0%",
             color="#86efac", fontsize=9, fontweight="bold", ha="right")
 
     # Good Tracks
     # 1. CPU API Track
-    ax.add_patch(Rectangle((0.9, 3.80), 2.6, 0.52, facecolor="#1a2332", edgecolor=BORDER_COL))
-    ax.text(1.0, 4.06, "CUDA API (Host)", color=CYAN_BLUE, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((3.7, 3.80), 11.4, 0.52, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((0.9, 2.05), 2.6, 0.44, facecolor="#1a2332", edgecolor=BORDER_COL))
+    ax.text(1.0, 2.27, "CUDA API (Host)", color=CYAN_BLUE, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((3.7, 2.05), 11.4, 0.44, facecolor=BG_TRACK, edgecolor=BORDER_COL))
 
-    ax.add_patch(Rectangle((3.9, 3.87), 5.2, 0.38, facecolor="#065f46"))
-    ax.text(6.5, 4.06, "cudaMemcpyAsync + Kernel Launches (Asynchronous - CPU immediately returns)",
+    ax.add_patch(Rectangle((3.9, 2.11), 5.2, 0.32, facecolor="#065f46"))
+    ax.text(6.5, 2.27, "cudaMemcpyAsync + Kernel Launches (Asynchronous - CPU immediately returns)",
             color="#d1fae5", fontsize=8, fontweight="bold", ha="center")
 
     # 2. GPU Stream 1 (Compute)
-    ax.add_patch(Rectangle((0.9, 3.10), 2.6, 0.52, facecolor="#1a2332", edgecolor=BORDER_COL))
-    ax.text(1.0, 3.36, "GPU Stream 1 (Compute)", color=NVIDIA_GREEN, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((3.7, 3.10), 11.4, 0.52, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((0.9, 1.48), 2.6, 0.44, facecolor="#1a2332", edgecolor=BORDER_COL))
+    ax.text(1.0, 1.70, "GPU Stream 1 (Compute)", color=NVIDIA_GREEN, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((3.7, 1.48), 11.4, 0.44, facecolor=BG_TRACK, edgecolor=BORDER_COL))
 
-    ax.add_patch(Rectangle((5.2, 3.17), 2.2, 0.38, facecolor=NVIDIA_GREEN))
-    ax.text(6.3, 3.36, "gemm_tiled [Chunk 0]", color="#000", fontsize=8, fontweight="bold", ha="center")
+    ax.add_patch(Rectangle((5.2, 1.54), 2.2, 0.32, facecolor=NVIDIA_GREEN))
+    ax.text(6.3, 1.70, "gemm_tiled [Chunk 0]", color="#000", fontsize=8, fontweight="bold", ha="center")
 
-    ax.add_patch(Rectangle((7.6, 3.17), 2.2, 0.38, facecolor=NVIDIA_GREEN))
-    ax.text(8.7, 3.36, "gemm_tiled [Chunk 1]", color="#000", fontsize=8, fontweight="bold", ha="center")
+    ax.add_patch(Rectangle((7.6, 1.54), 2.2, 0.32, facecolor=NVIDIA_GREEN))
+    ax.text(8.7, 1.70, "gemm_tiled [Chunk 1]", color="#000", fontsize=8, fontweight="bold", ha="center")
 
     # 3. GPU Stream 2 (Memory Overlap)
-    ax.add_patch(Rectangle((0.9, 2.40), 2.6, 0.52, facecolor="#1a2332", edgecolor=BORDER_COL))
-    ax.text(1.0, 2.66, "GPU Stream 2 (Memory)", color=MEMCPY_ORANGE, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((3.7, 2.40), 11.4, 0.52, facecolor=BG_TRACK, edgecolor=BORDER_COL))
+    ax.add_patch(Rectangle((0.9, 0.90), 2.6, 0.44, facecolor="#1a2332", edgecolor=BORDER_COL))
+    ax.text(1.0, 1.12, "GPU Stream 2 (Memory)", color=MEMCPY_ORANGE, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((3.7, 0.90), 11.4, 0.44, facecolor=BG_TRACK, edgecolor=BORDER_COL))
 
-    ax.add_patch(Rectangle((3.9, 2.47), 1.2, 0.38, facecolor=MEMCPY_ORANGE))
-    ax.text(4.5, 2.66, "[H2D Chunk 0]", color="#fff", fontsize=7.5, ha="center")
+    ax.add_patch(Rectangle((3.9, 0.96), 1.2, 0.32, facecolor=MEMCPY_ORANGE))
+    ax.text(4.5, 1.12, "[H2D Chunk 0]", color="#fff", fontsize=7.5, ha="center")
 
     # Overlapped block
-    ax.add_patch(Rectangle((5.3, 2.47), 2.1, 0.38, facecolor=MEMCPY_ORANGE))
-    ax.text(6.35, 2.66, "[H2D Chunk 1 (OVERLAPPED!)]", color="#fff", fontsize=7.5, fontweight="bold", ha="center")
+    ax.add_patch(Rectangle((5.3, 0.96), 2.1, 0.32, facecolor=MEMCPY_ORANGE))
+    ax.text(6.35, 1.12, "[H2D Chunk 1 (OVERLAPPED!)]", color="#fff", fontsize=7.5, fontweight="bold", ha="center")
 
-    ax.add_patch(Rectangle((7.6, 2.47), 1.2, 0.38, facecolor=MEMCPY_ORANGE))
-    ax.text(8.2, 2.66, "[D2H Chunk 0]", color="#fff", fontsize=7.5, ha="center")
+    ax.add_patch(Rectangle((7.6, 0.96), 1.2, 0.32, facecolor=MEMCPY_ORANGE))
+    ax.text(8.2, 1.12, "[D2H Chunk 0]", color="#fff", fontsize=7.5, ha="center")
 
-    ax.text(0.9, 2.30, "[*] Overlapped Concurrency: Data transfers for Chunk 1 run simultaneously with computation for Chunk 0; GPU idle bubbles are eliminated.",
-            color="#86efac", fontsize=8.2)
-
-    # ==========================
-    # BOTTOM DISCUSSION PANEL
-    # ==========================
-    ax.add_patch(FancyBboxPatch((0.6, 0.35), 14.8, 1.75, boxstyle="round,pad=0.0,rounding_size=0.12",
-                                facecolor="#121722", edgecolor=BORDER_COL, linewidth=1.4))
-    ax.text(0.9, 1.80, "[DISCUSSION] ARCHITECTURAL ANALYSIS: WHY DID STREAM PIPELINING WORK?",
-            color=CYAN_BLUE, fontsize=10.5, fontweight="bold")
-
-    b1 = "• The Bottleneck: Modern GPUs possess independent Direct Memory Access (DMA) engines alongside the SM compute cores. In serial synchronous code, these two engines never execute together—wasting up to 55% of wall-clock time while SMs sit completely starved."
-    b2 = "• The Pipelined Remedy & Verdict: Splitting matrix batches across independent CUDA streams allows the DMA engine to copy Chunk N+1 over PCIe while the SMs simultaneously compute Chunk N. Wall-clock execution time collapsed from 15.0 ms to 6.3 ms (2.38x speedup) with zero white starvation gaps."
-
-    draw_multiline(ax, 0.9, 1.50, b1, width_chars=112, line_spacing=0.22, color="#cbd5e1", fontsize=8.5)
-    draw_multiline(ax, 0.9, 1.00, b2, width_chars=112, line_spacing=0.22, color=NVIDIA_GREEN, fontsize=8.8, fontweight="bold")
+    ax.text(0.9, 0.52, "[*] Overlapped Concurrency: Data transfers for Chunk 1 run simultaneously with computation for Chunk 0; GPU idle bubbles are eliminated.",
+            color="#86efac", fontsize=8.0)
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=180, facecolor=BG_DARK, edgecolor="none")

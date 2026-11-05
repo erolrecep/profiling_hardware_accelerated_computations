@@ -373,7 +373,9 @@
           <span class="badge-pill">NVIDIA nsys GUI: Bad vs. Good</span>
           <h2>Nsight Systems: Macro Timeline View</h2>
           <h3>Synchronous Stalls (15.0 ms) vs. Pipelined Asynchronous Overlap (6.3 ms)</h3>
-          <img src="images/snapshots/snapshot_nsys_comparison.png" class="slide-snapshot" alt="Nsight Systems Bad vs Good Timeline Snapshot">
+          <div class="snapshot-frame">
+            <img src="images/snapshots/snapshot_nsys_comparison.png" class="slide-snapshot" alt="Nsight Systems Bad vs Good Timeline Snapshot">
+          </div>
           <p class="slide-caption">
             Notice the <strong>red host-sync stall bar</strong> and <strong>white GPU idle bubbles</strong> in the baseline, completely resolved by stream concurrency.
           </p>
@@ -450,7 +452,9 @@
           <span class="badge-pill">NVIDIA ncu GUI: Bad vs. Good</span>
           <h2>Nsight Compute: Before vs. After Optimization</h2>
           <h3>Warp Efficiency: 14.28% (4.5 / 32) ➔ 68.42% (21.9 / 32) [2.03x Speedup]</h3>
-          <img src="images/snapshots/snapshot_ncu_comparison.png" class="slide-snapshot" alt="Nsight Compute Bad vs Good Comparison Snapshot">
+          <div class="snapshot-frame">
+            <img src="images/snapshots/snapshot_ncu_comparison.png" class="slide-snapshot" alt="Nsight Compute Bad vs Good Comparison Snapshot">
+          </div>
           <p class="slide-caption">
             Notice how 1D grid-stride loops dynamically redistribute unfinished pixels, quadrupling active threads and halving runtime.
           </p>
@@ -529,7 +533,9 @@
           <span class="badge-pill">PyTorch Profiler GUI: Bad vs. Good</span>
           <h2>PyTorch Profiler: Before vs. After Optimization</h2>
           <h3>Host Sync Stalls: 86.2% (265.4 ms) ➔ 0.0% (Eliminated!) [4.82x Speedup]</h3>
-          <img src="images/snapshots/snapshot_torch_comparison.png" class="slide-snapshot" alt="PyTorch Profiler Bad vs Good Comparison Snapshot">
+          <div class="snapshot-frame">
+            <img src="images/snapshots/snapshot_torch_comparison.png" class="slide-snapshot" alt="PyTorch Profiler Bad vs Good Comparison Snapshot">
+          </div>
           <p class="slide-caption">
             Notice how deleting the per-iteration host check completely eradicates <code>aten::_local_scalar_dense</code>, unlocking pure GPU acceleration.
           </p>
@@ -687,7 +693,9 @@ Open in Colab Badge
           <h2>Side-by-Side Profilers: What to Expect</h2>
           <h3>System Timeline (nsys) vs Micro-Kernel (ncu) vs Framework (torch.profiler)</h3>
           
-          <img src="images/snapshots/snapshot_side_by_side_comparison.png" class="slide-snapshot" alt="Side-by-Side Profiler GUI Comparison">
+          <div class="snapshot-frame">
+            <img src="images/snapshots/snapshot_side_by_side_comparison.png" class="slide-snapshot" alt="Side-by-Side Profiler GUI Comparison">
+          </div>
           <p class="nav-prompt">⬇️ Press DOWN to view CUDA 12 vs. CUDA 13 CLI terminal tables</p>
           <aside class="notes">
             This slide gives attendees a single visual guide showing how the 3 primary tools fit together: Macro Timeline, Micro Kernel, and Framework Operator graph.
