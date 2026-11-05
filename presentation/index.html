@@ -19,22 +19,22 @@
       <section data-background-gradient="linear-gradient(to bottom right, #090d16, #0f172a)">
         <span class="badge-pill">Half-Day Academic & Systems Workshop</span>
         <h1 style="font-size: 2.1em; line-height: 1.2;">Profiling Hardware Accelerated<br><span style="color: #38bdf8;">Computations</span></h1>
-        <h3 style="font-size: 1.1em; color: #94a3b8; margin-top: 15px;">Demystifying Silicon Bottlenecks across CPU, GPU, and Heterogeneous Silicon</h3>
-        <p style="font-size: 0.8em; margin-top: 40px; color: #cbd5e1;">
+        <h3 style="font-size: 1.1em; color: #94a3b8; margin-top: 15px;">A Practical, Diagnostic Guide to Making Your Code Run 10x to 1000x Faster</h3>
+        <p style="font-size: 0.8em; margin-top: 35px; color: #cbd5e1;">
           <strong>Recep Erol, PhD</strong><br>
           Computational Scientist for AI<br>
           Center for Research Computing (CRC), Rice University
         </p>
         <aside class="notes">
-          Welcome everyone to this half-day workshop on Profiling Hardware Accelerated Computations.
-          Today we move away from guessing why code is slow and establish a rigorous, telemetry-driven approach.
-          Whether running on Rice's NOTS supercomputing cluster or an Apple Silicon laptop, we will see how hardware counters reveal the truth.
+          Welcome everyone! Today is all about practical performance optimization.
+          You do not need a PhD in compiler theory or math to make your code fast.
+          We will treat profiling like a medical X-ray: run the tool, spot the bottleneck, and apply the standard cure.
         </aside>
       </section>
 
-      <!-- SLIDE 2: ABOUT ME SLIDE (From Vibecoding-Workshop) -->
+      <!-- SLIDE 2: ABOUT ME SLIDE -->
       <section>
-        <span class="badge-pill">Speaker Introduction</span>
+        <span class="badge-pill">Instructor Introduction</span>
         <h2>About Me</h2>
         <div style="display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 30px;">
           <img src="images/avatar.jpeg" alt="Dr. Recep Erol" style="width: 220px; height: 220px; border-radius: 50%; border: 3px solid #38bdf8; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);">
@@ -59,681 +59,859 @@
           </div>
         </div>
         <aside class="notes">
-          Brief background: I serve as Computational Scientist for AI at Rice University's Center for Research Computing.
-          My focus is helping researchers scale AI, physics simulations, and scientific computing on large-scale HPC clusters and specialized accelerators.
+          At Rice CRC, I assist researchers and engineers running high-performance workloads across our clusters (NOTS) and modern GPU architectures.
+          Today's workshop distills the exact techniques we use daily to unblock stalled simulations and AI pipelines.
         </aside>
       </section>
 
-      <!-- SLIDE 3: AGENDA & LEARNING OBJECTIVES -->
+      <!-- SLIDE 3: WHY PROFILING MATTERS -->
       <section>
-        <span class="badge-pill">Roadmap</span>
-        <h2>Workshop Agenda</h2>
-        <div class="card-grid">
+        <span class="badge-pill badge-green">Core Motivation</span>
+        <h2>Why Profiling Matters</h2>
+        <h3 style="font-size: 1.05em; color: #f87171;">"Premature optimization without measurement is blind guessing."</h3>
+        
+        <div class="card-grid" style="margin-top: 25px;">
           <div class="card-box">
-            <h4>1. Theory & Tools</h4>
-            <ul>
-              <li>The Empirical Optimization Loop</li>
-              <li>Roofline Model: Compute vs Memory</li>
-              <li>5 Profiling Tools (nsys, ncu, Torch, Scalene, Memray)</li>
-            </ul>
+            <h4>🚫 The Blind Guessing Trap</h4>
+            <p>
+              Developers usually spend 80% of their time rewriting functions that only take 2% of total runtime.
+              Human intuition about hardware bottlenecks is almost always wrong!
+            </p>
           </div>
           <div class="card-box">
-            <h4>2. Mini-Project Workloads</h4>
-            <ul>
-              <li>Dense Matrix Multiplication (GEMM)</li>
-              <li>Mandelbrot Fractal (Warp Divergence)</li>
-              <li>6 Backends: Python to Native CUDA C</li>
-            </ul>
-          </div>
-          <div class="card-box">
-            <h4>3. Telemetry Case Studies</h4>
-            <ul>
-              <li>The 10,000x Python Interpreter Tax</li>
-              <li>The Hidden PyTorch Device-to-Host Stall</li>
-              <li>Visualizing Inactive SIMD Threads</li>
-            </ul>
-          </div>
-          <div class="card-box">
-            <h4>4. Practical Mastery</h4>
-            <ul>
-              <li>Shared Memory Tiling & Coalescing</li>
-              <li>The Diagnostic Decision Tree</li>
-              <li>Turnkey Makefile Benchmarking</li>
-            </ul>
+            <h4>💡 The Telemetry Approach</h4>
+            <p>
+              Profilers measure what the silicon is actually doing: cache misses, idle cores, memory bandwidth, and PCIe bus traffic.
+              Measurement gives you the exact line of code to fix.
+            </p>
           </div>
         </div>
-        <aside class="notes">
-          Today's workshop is packed with empirical facts. We will not look at abstract theory without executing real code.
-          You will learn how to profile both memory-bound and compute-bound workloads and diagnose real bottlenecks.
-        </aside>
-      </section>
-
-      <!-- SLIDE 4: THE EMPIRICAL OPTIMIZATION LOOP -->
-      <section>
-        <span class="badge-pill">Core Philosophy</span>
-        <h2>The Empirical Optimization Loop</h2>
-        <p style="font-size: 0.85em; color: #94a3b8;">Intuition fails in heterogeneous silicon. Never optimize without telemetry.</p>
-        <div style="background: rgba(30, 41, 59, 0.5); padding: 25px; border-radius: 12px; margin-top: 25px; border: 1px solid rgba(56, 189, 248, 0.2);">
-          <p style="font-family: monospace; font-size: 0.9em; line-height: 1.8; color: #f8fafc;">
-            [1. Baseline Implementation] ➔ [2. Hardware Counter Probe]<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
-            [5. Speedup Telemetry]  [4. Parity Test]  [3. Roofline Diagnosis]
+        <div class="card-box" style="margin-top: 20px; border-left: 4px solid #38bdf8; text-align: left;">
+          <p style="font-size: 0.88em; color: #f1f5f9;">
+            <strong>The Golden Rule:</strong> Never optimize a single line of code until a profiler highlights it in red!
           </p>
         </div>
-        <ul style="font-size: 0.8em; margin-top: 20px; line-height: 1.6;">
-          <li><strong>Rule 1:</strong> Measure the unoptimized baseline with nanosecond precision.</li>
-          <li><strong>Rule 2:</strong> Consult the Roofline Model: Are you compute-bound or memory-bound?</li>
-          <li><strong>Rule 3:</strong> Never accept an optimization that alters numerical parity ($\epsilon \le 10^{-5}$).</li>
-        </ul>
         <aside class="notes">
-          The fundamental rule of systems performance engineering: If you didn't profile it, your optimization is a guess.
-          Often developers spend weeks vectorizing loops when 90% of the runtime is spent copying data across the PCIe bus.
+          Emphasize that we are not here to memorize theoretical math. We are here to learn how to read profiler reports and let the tools guide our optimizations.
         </aside>
       </section>
 
-      <!-- SLIDE 5: SPECTRUM OF PROFILING: DETERMINISTIC VS PROBABILISTIC -->
+      <!-- SLIDE 4: THE PERFORMANCE DETECTIVE -->
       <section>
-        <span class="badge-pill">Methodology</span>
-        <h2>Profiling Taxonomy</h2>
-        <h3>Deterministic (Tracing) vs. Probabilistic (Sampling)</h3>
-        <div class="card-grid" style="margin-top: 30px;">
-          <div class="card-box" style="border-left: 4px solid #f59e0b;">
-            <h4 style="color: #f59e0b;">Deterministic (Tracing)</h4>
-            <ul>
-              <li><strong>Mechanism:</strong> Intercepts every function enter/exit event.</li>
-              <li><strong>Resolution:</strong> 100% exact call count and call graph.</li>
-              <li><strong>Overhead:</strong> High (>2x to 10x slowdown).</li>
-              <li><strong>Hazard:</strong> Distorts instruction caches and pipeline timing.</li>
-              <li><strong>Tools:</strong> Python <code>cProfile</code>, <code>Memray</code>, Kineto.</li>
-            </ul>
+        <span class="badge-pill">The Workflow</span>
+        <h2>The 3-Step Performance Detective</h2>
+        <h3 style="font-size: 1.0em;">A Simple, Repeatable Recipe for Any Codebase</h3>
+
+        <div class="card-grid-3">
+          <div class="step-card" style="border-top: 4px solid #4ade80;">
+            <div style="font-size: 2.0em; margin-bottom: 8px;">🟢</div>
+            <h4 style="color: #4ade80;">1. RUN</h4>
+            <p style="font-size: 0.82em;">
+              Run your script with a profiler flag (or <code>make profile_*</code>). 
+              No code modifications required.
+            </p>
           </div>
-          <div class="card-box" style="border-left: 4px solid #10b981;">
-            <h4 style="color: #10b981;">Probabilistic (Sampling)</h4>
-            <ul>
-              <li><strong>Mechanism:</strong> Samples program counter at fixed timer/PMU intervals.</li>
-              <li><strong>Resolution:</strong> Statistical estimate of hot code regions.</li>
-              <li><strong>Overhead:</strong> Extremely low (&lt; 2%).</li>
-              <li><strong>Benefit:</strong> Safe for production and large-scale HPC workloads.</li>
-              <li><strong>Tools:</strong> <code>nsys</code>, <code>Scalene</code>, Linux <code>perf</code>.</li>
-            </ul>
+          <div class="step-card" style="border-top: 4px solid #fbbf24;">
+            <div style="font-size: 2.0em; margin-bottom: 8px;">🟡</div>
+            <h4 style="color: #fbbf24;">2. SPOT</h4>
+            <p style="font-size: 0.82em;">
+              Look at the summary table: Find the row with <strong>80%+ time</strong> or the red warning bar. That's your smoking gun!
+            </p>
+          </div>
+          <div class="step-card" style="border-top: 4px solid #f87171;">
+            <div style="font-size: 2.0em; margin-bottom: 8px;">🔴</div>
+            <h4 style="color: #f87171;">3. FIX</h4>
+            <p style="font-size: 0.82em;">
+              Apply the targeted recipe: flip a loop, add <code>@njit</code>, remove a host check, or tile memory. Verify the speedup!
+            </p>
           </div>
         </div>
         <aside class="notes">
-          Understand which tool to choose. Use sampling when you need realistic timing without altering cache state.
-          Use tracing when you need exact memory allocation tracking or operator call trees.
+          This 3-step loop is what attendees should remember. Run -> Spot -> Fix. It's accessible to any programmer regardless of background.
         </aside>
       </section>
 
-      <!-- SLIDE 6: THE ROOFLINE MODEL -->
+      <!-- SLIDE 5: HARDWARE REALITY WITHOUT MATH -->
       <section>
-        <span class="badge-pill">Silicon Boundaries</span>
-        <h2>The Roofline Model</h2>
-        <p style="font-size: 0.85em; color: #94a3b8;">
-          $$P_{\text{attainable}} = \min \left( P_{\text{peak}}, \; I \times B_{\text{peak}} \right)$$
-        </p>
-        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 15px; margin-top: 15px;">
-          <pre style="margin: 0; font-size: 0.7em; color: #38bdf8;">
-Throughput (GFLOPS)
-  ▲
-  │                     Peak Compute Ceiling (P_peak)
-  │               ┌──────────────────────────────────────
-  │              /
-  │             /   Ridge Point: I_ridge = P_peak / B_peak
-  │            /
-  │  Memory   /      Compute-Bound Regime
-  │  Bound   /       (Adding more bandwidth does nothing!)
-  │  Slope  /
-  └────────┴────────────────────────────────────────────►
-                    Operational Intensity I = FLOPs / Byte</pre>
+        <span class="badge-pill badge-purple">Hardware Intuition</span>
+        <h2>The Hardware Reality (In Plain English)</h2>
+        <h3 style="font-size: 1.0em; color: #94a3b8;">Why Does Fast Hardware Run Slow Code?</h3>
+
+        <div class="card-grid">
+          <div class="card-box">
+            <h4>🏎️ The Ferrari Engine (Compute)</h4>
+            <p>
+              Your GPU has thousands of cores ready to crunch billions of numbers per second.
+              The compute units are almost never the bottleneck in naive code.
+            </p>
+          </div>
+          <div class="card-box">
+            <h4>🥤 The Soda Straw (Memory & Bus)</h4>
+            <p>
+              Cores are fed data through memory buses and PCIe lanes.
+              If data arrives scattered or in random order, your Ferrari engine sits parked, waiting for gas!
+            </p>
+          </div>
         </div>
-        <div style="font-size: 0.75em; text-align: left; margin-top: 15px;">
-          <p>• <strong>Memory-Bound Regime:</strong> $I &lt; I_{\text{ridge}}$. Throughput is limited by DRAM bandwidth. Solution: Cache Tiling.</p>
-          <p>• <strong>Compute-Bound Regime:</strong> $I &gt; I_{\text{ridge}}$. Throughput is limited by ALU / FMA execution ports. Solution: Tensor Cores & ILP.</p>
+
+        <div class="card-box" style="margin-top: 20px; text-align: left; background: rgba(30, 41, 59, 0.8);">
+          <p style="font-size: 0.85em;">
+            💡 <strong>The Lesson:</strong> Most "slow code" isn't doing too much math; it's starving the hardware by fetching data the wrong way or asking the CPU to synchronize too often.
+          </p>
         </div>
         <aside class="notes">
-          The Roofline model tells you whether you are wasting your time.
-          If your algorithm transfers 1 byte for every 1 floating-point op, you are stuck on the sloped memory roof.
-          No amount of loop unrolling or multi-threading will help until you increase operational intensity.
+          The soda straw analogy is easy to grasp: high compute capacity, limited memory bandwidth. Memory bottlenecks are why code crawls.
         </aside>
       </section>
 
-      <!-- SLIDE 7: MINI-PROJECT 1: DENSE GEMM -->
+      <!-- SLIDE 6: MINI-PROJECT 1 (GEMM) -->
       <section>
-        <span class="badge-pill">Workload Archetype 1</span>
+        <span class="badge-pill">Mini-Project 1</span>
         <h2>Dense Matrix Multiplication (GEMM)</h2>
-        <h3>The Compute-Bound Archetype</h3>
-        <p style="font-size: 0.85em;">$$\mathbf{C} = \alpha \mathbf{A}\mathbf{B} + \beta \mathbf{C}, \quad A, B, C \in \mathbb{R}^{N \times N}$$</p>
-        <div class="card-grid">
+        <h3 style="font-size: 1.0em;">Multiplying Two 2D Grids of Numbers</h3>
+
+        <div class="side-by-side">
           <div class="card-box">
-            <h4>Algorithmic Properties</h4>
-            <ul>
-              <li><strong>Total FLOPs:</strong> $2N^3$ operations ($N^3$ multiplies + $N^3$ adds).</li>
-              <li><strong>Memory Footprint:</strong> $3N^2 \times 4\text{ bytes}$ (FP32).</li>
-              <li><strong>Operational Intensity:</strong>
-                $$I = \frac{2N^3}{12N^2} = \frac{N}{6} \quad \left[\frac{\text{FLOPs}}{\text{Byte}}\right]$$
-              </li>
-            </ul>
+            <h4>📦 The Concept</h4>
+            <p style="font-size: 0.82em; line-height: 1.5;">
+              Every cell in Matrix $C$ is computed by multiplying a row of $A$ by a column of $B$.<br><br>
+              <strong>The Problem:</strong> Computer memory stores data in horizontal rows. Reading down a column jumps across memory like skipping steps on a staircase!
+            </p>
           </div>
           <div class="card-box">
-            <h4>Silicon Stress Point</h4>
-            <ul>
-              <li>At $N=128$, $I \approx 21.3$ (Memory-bound).</li>
-              <li>At $N=2048$, $I \approx 341.3$ (Deeply compute-bound).</li>
-              <li>Stresses <strong>Cache Hierarchy</strong>: L1 cache ($SRAM$), L2 cache, register file allocation, and Tensor Cores.</li>
-            </ul>
+            <h4>🥤 The 6-Pack Analogy</h4>
+            <p style="font-size: 0.82em; line-height: 1.5;">
+              When hardware fetches 1 number, it loads <strong>64 consecutive bytes</strong> into cache (like bringing home a 6-pack of soda).<br><br>
+              • <strong>Row Access:</strong> Drinks all 6 cans (zero delay!).<br>
+              • <strong>Column Access:</strong> Throws away 5 cans and walks back to the store for each sip!
+            </p>
           </div>
         </div>
         <aside class="notes">
-          GEMM is the bedrock of modern deep learning and scientific computing.
-          Notice how the operational intensity scales with N. For small matrices, it is memory-bound; for large matrices, it hits the compute ceiling.
+          Highlight that GEMM teaches spatial cache locality. Changing the loop order from i-j-k to i-k-j gives an 8.2x speedup in pure Python without any libraries.
         </aside>
       </section>
 
-      <!-- SLIDE 8: MINI-PROJECT 2: MANDELBROT FRACTALS -->
+      <!-- SLIDE 7: MINI-PROJECT 2 (MANDELBROT) -->
       <section>
-        <span class="badge-pill">Workload Archetype 2</span>
+        <span class="badge-pill">Mini-Project 2</span>
         <h2>Mandelbrot Fractal Generation</h2>
-        <h3>The Divergent & Latency-Bound Archetype</h3>
-        <p style="font-size: 0.85em;">$$z_0 = 0, \quad z_{k+1} = z_k^2 + c, \quad c \in \mathbb{C}$$</p>
-        <div class="card-grid">
+        <h3 style="font-size: 1.0em;">The Ultimate Test of Parallel Teamwork</h3>
+
+        <div class="side-by-side">
           <div class="card-box">
-            <h4>Algorithmic Properties</h4>
-            <ul>
-              <li>Escape condition: $|z_k|^2 = x_k^2 + y_k^2 > 4.0$ or $k = K_{\max}$.</li>
-              <li><strong>Memory Light:</strong> Very few bytes read or written.</li>
-              <li><strong>Extreme Irregularity:</strong> Outer black pixels escape in 2 iterations; boundary pixels require 500 iterations.</li>
-            </ul>
+            <h4>🎨 The Concept</h4>
+            <p style="font-size: 0.82em; line-height: 1.5;">
+              We color a picture by testing every pixel: does its number explode to infinity, or stay trapped in the fractal?<br><br>
+              • <strong>Outside points:</strong> Escape in 2 quick steps.<br>
+              • <strong>Boundary points:</strong> Take all 500 steps.
+            </p>
           </div>
           <div class="card-box">
-            <h4>Silicon Stress Point</h4>
-            <ul>
-              <li><strong>Warp Divergence:</strong> GPU warps of 32 threads lockstep serialize.</li>
-              <li>If 31 threads escape early and 1 thread continues, 31 cores sit idle!</li>
-              <li>Effective warp execution efficiency collapses to under <strong>5%</strong> without workload rebalancing.</li>
-            </ul>
+            <h4>🚌 The Tour Bus Analogy</h4>
+            <p style="font-size: 0.82em; line-height: 1.5;">
+              GPU threads work in tight groups of 32 (called a <strong>Warp</strong>).<br><br>
+              If 31 tourists finish in 2 minutes, but 1 tourist takes 500 minutes, <strong>the entire bus must sit parked waiting for that 1 person!</strong><br>
+              This is <em>Warp Divergence</em>.
+            </p>
           </div>
         </div>
         <aside class="notes">
-          In contrast to GEMM, Mandelbrot is the perfect archetype for irregular control flow.
-          It demonstrates how parallel architectures suffer when threads take different execution paths.
+          The tour bus analogy makes warp divergence immediately intuitive. The GPU executes lockstep; threads masked off are idle silicon.
         </aside>
       </section>
 
-      <!-- SLIDE 9: TOOL 1: NVIDIA NSIGHT SYSTEMS (nsys) -->
+      <!-- SLIDE 8: THE TOOLKIT LANDSCAPE -->
       <section>
-        <span class="badge-pill">Profiling Tool 1</span>
-        <h2>NVIDIA Nsight Systems (<code>nsys</code>)</h2>
-        <h3>Macro-Level System Timeline Analysis</h3>
-        <div class="card-box" style="margin-top: 20px;">
-          <h4>What <code>nsys</code> Captures</h4>
-          <ul>
-            <li><strong>CPU-GPU Coordination:</strong> Visualizes thread scheduling, OS context switches, and CUDA API call latencies.</li>
-            <li><strong>Memory Transfers:</strong> Tracks PCIe Host-to-Device (H2D) and Device-to-Host (D2H) copy durations.</li>
-            <li><strong>Stream Overlap:</strong> Shows whether compute kernels and DMA memory copies execute concurrently across streams.</li>
-          </ul>
+        <span class="badge-pill">Diagnostic Toolkit</span>
+        <h2>The 5 Diagnostic Tools at a Glance</h2>
+        <h3 style="font-size: 1.0em;">Each tool gives you a different angle on your program</h3>
+
+        <div style="font-size: 0.72em; margin-top: 20px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Tool Name</th>
+                <th>Diagnostic Role</th>
+                <th>What It Sees</th>
+                <th>Best For</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong style="color: #38bdf8;">NVIDIA nsys</strong></td>
+                <td>The Drone View (Macro)</td>
+                <td>Full system timeline, CPU/GPU overlap, PCIe transfers</td>
+                <td>Host-device starvation & sync stalls</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #4ade80;">NVIDIA ncu</strong></td>
+                <td>The Microscope (Micro)</td>
+                <td>GPU hardware counters, cache hits, warp efficiency</td>
+                <td>Memory bandwidth vs compute bottlenecks</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #fbbf24;">PyTorch Profiler</strong></td>
+                <td>The Framework Inspector</td>
+                <td>PyTorch operator graph, CPU vs GPU time, allocations</td>
+                <td>Accidental CPU blocking calls in PyTorch</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #f87171;">Scalene</strong></td>
+                <td>The Highlighting Pen</td>
+                <td>Line-by-line % Python vs % Native C vs % GPU time</td>
+                <td>Finding Python bytecode overhead</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #c084fc;">Memray</strong></td>
+                <td>The Memory Scale</td>
+                <td>Heap allocations, peak RAM usage, visual flamegraphs</td>
+                <td>Memory leaks & excessive object creation</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <pre><code class="language-bash"># Run system-wide trace with OS runtime and NVTX markers
-nsys profile --trace=cuda,nvtx,osrt --stats=true \
-    --output=telemetry/nsys_gemm src/gemm/gemm_cuda 1024 10</code></pre>
-        <p style="font-size: 0.75em; color: #4ade80;">💡 Best For: Identifying pipeline bubbles, host serialization, and PCIe transfer bottlenecks.</p>
         <aside class="notes">
-          Start every GPU investigation with Nsight Systems.
-          It gives you the bird's-eye view. If your GPU timeline shows 80% white space between tiny kernel spikes, your bottleneck is CPU launch latency, not the kernel itself.
+          Walk through the 5 tools. Emphasize that they complement each other. You don't run all 5 at once; you start macro and zoom in.
         </aside>
       </section>
 
-      <!-- SLIDE 10: TOOL 2: NVIDIA NSIGHT COMPUTE (ncu) -->
+      <!-- SLIDE 9: NVIDIA TOOLING GUIDE (CUDA 12 vs 13) -->
       <section>
-        <span class="badge-pill">Profiling Tool 2</span>
-        <h2>NVIDIA Nsight Compute (<code>ncu</code>)</h2>
-        <h3>Micro-Architectural Kernel Analysis</h3>
-        <div class="card-box" style="margin-top: 20px;">
-          <h4>What <code>ncu</code> Captures</h4>
-          <ul>
-            <li><strong>Speed-of-Light (SOL):</strong> Precise % of theoretical compute and DRAM memory bandwidth utilized.</li>
-            <li><strong>Kernel Roofline Chart:</strong> Interactive visualization showing where your kernel sits relative to the ridge point.</li>
-            <li><strong>Warp Stall Statistics:</strong> Reveals why warps are blocked (Long Scoreboard, Memory Throttle, Sync Barriers).</li>
-          </ul>
+        <span class="badge-pill badge-green">Ecosystem Guide</span>
+        <h2>NVIDIA Profilers: CUDA 12 vs. CUDA 13</h2>
+        <h3 style="font-size: 1.0em;">What Changed, What Stays the Same</h3>
+
+        <div class="side-by-side" style="margin-top: 20px;">
+          <div class="card-box" style="border-left: 3px solid #38bdf8;">
+            <h4>⚙️ CUDA 12.x Environments</h4>
+            <p style="font-size: 0.8em; line-height: 1.5;">
+              • Common on Hopper (H100), Ada (RTX 4090), and Ampere (A100) clusters.<br>
+              • <code>nsys</code> reports raw nanosecond columns.<br>
+              • <code>ncu</code> focuses on Tensor Core and DPX metrics.<br>
+              • Relies on standard SIMT execution tracking.
+            </p>
+          </div>
+          <div class="card-box" style="border-left: 3px solid #4ade80;">
+            <h4>🚀 CUDA 13.x Environments</h4>
+            <p style="font-size: 0.8em; line-height: 1.5;">
+              • Modern standard for Blackwell (B200 / GB200) architectures.<br>
+              • <code>nsys</code> auto-formats duration into clean <code>ms</code>/<code>us</code>.<br>
+              • Explicit Subsystem column (<code>SM / DRAM</code> vs <code>SM / Shared</code>).<br>
+              • Unified Multi-GPU & Tile IR tracing.
+            </p>
+          </div>
         </div>
-        <pre><code class="language-bash"># Deep kernel analysis with SpeedOfLight and Warp State counters
-ncu --set full --section SpeedOfLight --section WarpStateStats \
-    --export telemetry/ncu_gemm src/gemm/gemm_cuda 1024 1</code></pre>
-        <p style="font-size: 0.75em; color: #4ade80;">💡 Best For: Fine-tuning kernel inner loops, register allocation, and shared memory bank conflicts.</p>
+
+        <div class="card-box" style="margin-top: 15px; text-align: left; background: rgba(56, 189, 248, 0.1);">
+          <p style="font-size: 0.84em; color: #f1f5f9;">
+            ✅ <strong>The Universal Takeaway:</strong> The profiling workflow is <strong>100% identical</strong> in CUDA 12 and 13! Run <code>nsys</code> first to check timeline gaps, then run <code>ncu</code> to inspect warp counters.
+          </p>
+        </div>
         <aside class="notes">
-          Once nsys tells you which kernel takes the most time, switch to Nsight Compute.
-          ncu replays the kernel and reads hardware performance monitor registers on the GPU Streaming Multiprocessor (SM).
+          This slide directly addresses the user's requirement. Users on clusters with CUDA 12 or 13 will feel confident that the concepts and commands are consistent.
         </aside>
       </section>
 
-      <!-- SLIDE 11: TOOL 3: PYTORCH PROFILER & PERFETTO -->
+      <!-- SLIDE 10: TOOL 1 (NSYS) -->
       <section>
-        <span class="badge-pill">Profiling Tool 3</span>
-        <h2>PyTorch Profiler & Perfetto</h2>
-        <h3>Framework Operator Tracing & Device Memory</h3>
-        <div class="card-box" style="margin-top: 20px;">
-          <h4>Key Capabilities</h4>
-          <ul>
-            <li><strong>Operator Call Tree:</strong> Traces ATen dispatch from Python down to cuBLAS / MPS kernels.</li>
-            <li><strong>Memory Timeline:</strong> Captures peak GPU memory allocation and active caching allocator blocks.</li>
-            <li><strong>Standard Trace Export:</strong> Exports JSON traces directly viewable in <code>ui.perfetto.dev</code> or <code>chrome://tracing</code>.</li>
-          </ul>
+        <span class="badge-pill">Tool 1: NVIDIA nsys</span>
+        <h2>NVIDIA Nsight Systems (nsys)</h2>
+        <h3 style="font-size: 1.0em;">The System-Wide Drone Camera</h3>
+
+        <div class="card-grid-3">
+          <div class="step-card">
+            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+            <pre><code class="language-bash">nsys profile \
+  --trace=cuda,osrt \
+  --stats=true \
+  ./my_program</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Captures host and GPU events into a timeline.</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+            <div class="terminal-box" style="font-size: 0.65em;">
+              cudaStreamSync: <span class="highlight-red">68.4%</span><br>
+              cudaLaunchKernel: 24.1%<br>
+              cudaMemcpy (H2D): 7.2%
+            </div>
+            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">The CPU is waiting 68% of the time on the GPU!</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #f87171;">🔴 3. FIX</h4>
+            <p style="font-size: 0.8em; line-height: 1.4;">
+              • Overlap memory copies with compute using CUDA streams.<br>
+              • Use <strong>CUDA Graphs</strong> to eliminate kernel launch bubbles.
+            </p>
+          </div>
         </div>
-        <pre><code class="language-python">with torch.profiler.profile(
-    activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA],
-    record_shapes=True, profile_memory=True
+        <aside class="notes">
+          Nsight Systems shows you the big picture. If you see white gaps on the timeline, your GPU is idling while the CPU prepares data.
+        </aside>
+      </section>
+
+      <!-- SLIDE 11: TOOL 2 (NCU) -->
+      <section>
+        <span class="badge-pill">Tool 2: NVIDIA ncu</span>
+        <h2>NVIDIA Nsight Compute (ncu)</h2>
+        <h3 style="font-size: 1.0em;">The Kernel-Level Microscope</h3>
+
+        <div class="card-grid-3">
+          <div class="step-card">
+            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+            <pre><code class="language-bash">ncu --section SpeedOfLight \
+    --section WarpStateStats \
+    ./my_program</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Inspects hardware counters inside individual kernels.</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+            <div class="terminal-box" style="font-size: 0.65em;">
+              Warp Efficiency: <span class="highlight-red">14.28%</span><br>
+              Avg Active Threads: <span class="highlight-red">4.5 / 32</span><br>
+              SM Throughput: 12.4%
+            </div>
+            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">27 out of 32 threads are sitting idle per warp!</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #f87171;">🔴 3. FIX</h4>
+            <p style="font-size: 0.8em; line-height: 1.4;">
+              • Convert 2D thread blocks to <strong>1D grid-stride loops</strong>.<br>
+              • Balance workloads across warps to jump from 14% to 68% efficiency!
+            </p>
+          </div>
+        </div>
+        <aside class="notes">
+          Nsight Compute tells you what happens inside the kernel. A low warp efficiency means branch divergence is wasting GPU cycles.
+        </aside>
+      </section>
+
+      <!-- SLIDE 12: TOOL 3 (PYTORCH PROFILER) -->
+      <section>
+        <span class="badge-pill">Tool 3: PyTorch Profiler</span>
+        <h2>PyTorch Profiler (torch.profiler)</h2>
+        <h3 style="font-size: 1.0em;">The Deep Learning Framework Inspector</h3>
+
+        <div class="card-grid-3">
+          <div class="step-card">
+            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+            <pre><code class="language-python">with profile(
+  activities=[CPU, CUDA],
+  record_shapes=True
 ) as prof:
-    output = model(inputs)
-prof.export_chrome_trace("telemetry/trace.json")</code></pre>
-        <aside class="notes">
-          PyTorch Profiler is the native tool for deep learning practitioners.
-          It maps high-level neural network layers to low-level GPU kernels and exposes memory spikes before they cause Out-Of-Memory crashes.
-        </aside>
-      </section>
-
-      <!-- SLIDE 12: TOOL 4: SCALENE -->
-      <section>
-        <span class="badge-pill">Profiling Tool 4</span>
-        <h2>Scalene Profiler</h2>
-        <h3>Line-by-Line Python vs. Native C vs. GPU Attribution</h3>
-        <div class="card-box" style="margin-top: 20px;">
-          <h4>The Power of Scalene</h4>
-          <ul>
-            <li>Traditional Python profilers (like cProfile) lump all time together.</li>
-            <li><strong>Scalene Dissects Execution:</strong> Separates time spent in <em>Python bytecode</em>, <em>native C/C++ extensions</em>, and <em>GPU execution</em>.</li>
-            <li>Zero code modifications required.</li>
-          </ul>
-        </div>
-        <pre><code class="language-bash"># Profile Python, C extension, and memory usage per line
-scalene run --cpu-only -o telemetry/scalene.json src/gemm/run_gemm.py --- --size 256
-scalene view --cli telemetry/scalene.json</code></pre>
-        <p style="font-size: 0.75em; color: #4ade80;">💡 Best For: Answering: "Is Python the bottleneck, or is my compiled library slow?"</p>
-        <aside class="notes">
-          Scalene was developed by researchers at UMass Amherst.
-          It uses hardware performance counters and sampling to give line-by-line attribution. It will tell you if a line is slow because Python is slow or because BLAS is slow.
-        </aside>
-      </section>
-
-      <!-- SLIDE 13: TOOL 5: MEMRAY -->
-      <section>
-        <span class="badge-pill">Profiling Tool 5</span>
-        <h2>Memray Memory Profiler</h2>
-        <h3>Heap Footprint, High-Water Marks & Flamegraphs</h3>
-        <div class="card-box" style="margin-top: 20px;">
-          <h4>Key Features</h4>
-          <ul>
-            <li>Tracks every memory allocation made by Python and compiled C/C++ extensions.</li>
-            <li>Identifies peak Resident Set Size (RSS) and temporary allocation churn.</li>
-            <li>Generates interactive SVG/HTML <strong>Flamegraphs</strong> to visualize allocation call stacks.</li>
-          </ul>
-        </div>
-        <pre><code class="language-bash"># Track memory allocations and generate interactive flamegraph
-memray run -o telemetry/memray.bin src/gemm/run_gemm.py --size 256
-memray flamegraph -o telemetry/flamegraph.html telemetry/memray.bin</code></pre>
-        <p style="font-size: 0.75em; color: #4ade80;">💡 Best For: Tracking down memory leaks and buffer reallocation churn in high-throughput pipelines.</p>
-        <aside class="notes">
-          Developed by Bloomberg, Memray is the gold standard for Python memory profiling.
-          It hooks into malloc and free at the libc level, so it captures C-extension memory that Python's tracemalloc cannot see.
-        </aside>
-      </section>
-
-      <!-- SLIDE 14: UNOPTIMIZED BASELINES -->
-      <section>
-        <span class="badge-pill">Initial Code</span>
-        <h2>The Unoptimized Baselines</h2>
-        <div class="card-grid">
-          <div class="card-box">
-            <h4>Naive GEMM (i-j-k)</h4>
-            <pre><code class="language-python"># O(N^3) cache-thrashing loop
-for i in range(N):
-    for j in range(N):
-        acc = 0.0
-        for k in range(N):
-            acc += A[i][k] * B[k][j]
-        C[i][j] = acc</code></pre>
-            <p>Traversing column $j$ of matrix $B$ incurs an L1 cache miss on every access!</p>
+    model(inputs)</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Built directly into PyTorch.</p>
           </div>
-          <div class="card-box">
-            <h4>Naive Mandelbrot</h4>
-            <pre><code class="language-python"># Pixel escape loop
-for row in range(H):
-    for col in range(W):
-        zx, zy, iters = 0.0, 0.0, 0
-        while zx*zx + zy*zy <= 4.0:
-            zx, zy = zx*zx - zy*zy + cx, ...
-            iters += 1
-        out[row][col] = iters</code></pre>
-            <p>Millions of interpreted Python instructions per frame!</p>
+          <div class="step-card">
+            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+            <div class="terminal-box" style="font-size: 0.62em;">
+              _local_scalar_dense: <span class="highlight-red">86.2%</span><br>
+              aten::where: 4.1%<br>
+              aten::mul: 3.2%
+            </div>
+            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">One single scalar sync is stealing 86% of your execution time!</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #f87171;">🔴 3. FIX</h4>
+            <p style="font-size: 0.8em; line-height: 1.4;">
+              • Delete <code>.item()</code> or <code>if not mask.any()</code> inside loops.<br>
+              • Keep operations tensorized on device for an instant <strong>4.8x speedup</strong>!
+            </p>
           </div>
         </div>
         <aside class="notes">
-          Here are our unoptimized baselines.
-          Notice that in GEMM, accessing B[k][j] inside loop k means we jump through memory by stride N. On a 1024x1024 matrix, that is a 4096-byte jump, blowing out cache lines.
+          PyTorch Profiler is the most accessible tool for AI developers. Finding aten::_local_scalar_dense is an instant lightbulb moment for attendees.
         </aside>
       </section>
 
-      <!-- SLIDE 15: TURNKEY MAKEFILE WORKFLOW -->
+      <!-- SLIDE 13: TOOL 4 (SCALENE) -->
       <section>
-        <span class="badge-pill">Turnkey Tooling</span>
-        <h2>The Master Makefile Workflow</h2>
-        <p style="font-size: 0.85em; color: #94a3b8;">Reproduce all benchmarks and profiling reports with single CLI commands:</p>
-        <pre><code class="language-bash"># Setup Python virtual environment & dependencies with uv
-make setup
+        <span class="badge-pill">Tool 4: Scalene</span>
+        <h2>Scalene: Line-by-Line Profiler</h2>
+        <h3 style="font-size: 1.0em;">The Highlighting Pen for Python & C Code</h3>
 
-# Run 10-test verification parity suite (PyTest)
-make test
-
-# Execute master benchmark sweep & generate PNG scaling plots
-make benchmark_all
-
-# Run specialized profilers
-make profile_torch     # PyTorch Profiler (Perfetto trace)
-make profile_scalene   # Scalene CPU/Memory breakdown
-make profile_memray    # Memray memory flamegraphs
-make profile_nsys      # NVIDIA Nsight Systems trace
-make profile_ncu       # NVIDIA Nsight Compute Roofline</code></pre>
-        <aside class="notes">
-          To ensure complete academic reproducibility, every benchmark, profiler, and verification test is orchestrated via the project Makefile.
-        </aside>
-      </section>
-
-      <!-- SLIDE 16: TELEMETRY CASE STUDY 1: PYTHON TAX -->
-      <section>
-        <span class="badge-pill">Case Study 1</span>
-        <h2>Telemetry Discovery: The Python Tax</h2>
-        <div class="card-grid">
-          <div class="card-box">
-            <h4>Measured Latency (N = 256)</h4>
-            <ul>
-              <li><strong>Pure Python ($i-j-k$):</strong> <span class="metric-highlight" style="color: #ef4444;">310.5 ms</span></li>
-              <li><strong>Pure Python ($i-k-j$):</strong> <span class="metric-highlight" style="color: #f59e0b;">325.1 ms</span></li>
-              <li><strong>Numba CPU Parallel:</strong> <span class="metric-highlight">0.203 ms</span></li>
-              <li><strong>Apple Silicon MPS / BLAS:</strong> <span class="metric-highlight">0.023 ms</span></li>
-            </ul>
+        <div class="card-grid-3">
+          <div class="step-card">
+            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+            <pre><code class="language-bash">scalene run \
+  --cpu-only \
+  my_script.py</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Runs with low overhead and outputs line-by-line attribution.</p>
           </div>
-          <div class="card-box">
-            <h4>Profiler Diagnosis</h4>
-            <p>• Pure Python achieves only <strong>0.11 GFLOPS</strong>.</p>
-            <p>• Numba JIT compiles to native vector instructions achieving <strong>165 GFLOPS</strong> — a <strong style="color: #4ade80;">1,530x speedup</strong>!</p>
-            <p>• Hardware BLAS saturates vector ports at <strong>1,460 GFLOPS</strong> — a <strong style="color: #4ade80;">13,700x speedup</strong>!</p>
+          <div class="step-card">
+            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+            <div class="terminal-box" style="font-size: 0.62em;">
+              Line 21: <span class="highlight-red">Python 84.6%</span> | Native 0.0%<br>
+              <code>for k in range(N):</code><br>
+              <code>  s += A[i][k] * B[k][j]</code>
+            </div>
+            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">Line 21 is pure Python bytecode interpretation!</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #f87171;">🔴 3. FIX</h4>
+            <p style="font-size: 0.8em; line-height: 1.4;">
+              • Add <code>@numba.njit(parallel=True)</code>.<br>
+              • Shifts execution from 85% Python to 99% Native C/LLVM (<strong>1,530x speedup</strong>).
+            </p>
           </div>
         </div>
         <aside class="notes">
-          Look at the sheer magnitude of the gap: 310 milliseconds down to 0.023 milliseconds.
-          A factor of nearly 14,000x difference on the exact same laptop processor.
-          This shows why understanding compiled execution and SIMD ports is critical.
+          Scalene colors your code. If a line is blue/red for Python, you replace it with compiled code. If it's already Native C, you optimize memory layout.
         </aside>
       </section>
 
-      <!-- SLIDE 17: TELEMETRY CASE STUDY 2: PCIE D2H TRAP -->
+      <!-- SLIDE 14: TOOL 5 (MEMRAY) -->
       <section>
-        <span class="badge-pill">Case Study 2</span>
-        <h2>Telemetry Discovery: The D2H Sync Trap</h2>
-        <p style="font-size: 0.85em; color: #ef4444;">Why was our vectorized PyTorch Mandelbrot slower than Numba CPU?</p>
-        <div class="card-box" style="margin-top: 15px;">
-          <pre><code class="language-python"># The innocent-looking line of code:
-for i in range(max_iter):
-    Z[mask] = Z[mask] * Z[mask] + C[mask]
-    escaped = (Z.real**2 + Z.imag**2) > 4.0
-    mask = mask & (~escaped)
-    if not mask.any():  # <--- FORCES DEVICE-TO-HOST CPU SYNCHRONIZATION!
+        <span class="badge-pill">Tool 5: Memray</span>
+        <h2>Memray: Heap Memory Profiler</h2>
+        <h3 style="font-size: 1.0em;">The Scale for Tracking RAM & Flamegraphs</h3>
+
+        <div class="card-grid-3">
+          <div class="step-card">
+            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+            <pre><code class="language-bash">memray run script.py
+memray flamegraph \
+  memray.bin</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Tracks every malloc/free in both Python and C libraries.</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+            <div class="terminal-box" style="font-size: 0.62em;">
+              Total Allocations: <span class="highlight-red">262,144</span><br>
+              Peak Memory: 12.8 MB<br>
+              Location: Float object boxing
+            </div>
+            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">262,000 tiny memory allocations inside the loop!</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #f87171;">🔴 3. FIX</h4>
+            <p style="font-size: 0.8em; line-height: 1.4;">
+              • Use contiguous NumPy arrays or PyTorch tensors.<br>
+              • 1 allocation instead of 262,000 — zero garbage collection overhead.
+            </p>
+          </div>
+        </div>
+        <aside class="notes">
+          Memray exposes allocation churn. Many Python programs run slow not from math, but because Python is busy allocating and freeing temporary heap objects.
+        </aside>
+      </section>
+
+      <!-- SLIDE 15: HANDS-ON MAKEFILE -->
+      <section>
+        <span class="badge-pill badge-green">Hands-On Practice</span>
+        <h2>Hands-On: The Turnkey Makefile</h2>
+        <h3 style="font-size: 1.0em;">One Simple Command for Every Workshop Step</h3>
+
+        <div class="card-grid" style="margin-top: 25px;">
+          <div class="card-box">
+            <h4>🧪 Benchmarks & Tests</h4>
+            <pre><code class="language-bash">make setup          # Setup uv venv
+make test           # Run 10 parity tests
+make benchmark_all  # Run scaling sweep</code></pre>
+          </div>
+          <div class="card-box">
+            <h4>🔬 Profiling Diagnostics</h4>
+            <pre><code class="language-bash">make profile_torch   # PyTorch trace
+make profile_scalene # Scalene report
+make profile_memray  # HTML flamegraph
+make profile_nsys    # CUDA 12/13 trace</code></pre>
+          </div>
+        </div>
+        <div class="card-box" style="margin-top: 15px; text-align: left;">
+          <p style="font-size: 0.85em;">
+            💡 <strong>Zero Setup Frustration:</strong> Everything runs locally on Apple Silicon (MPS/CPU) or on NVIDIA HPC clusters (CUDA) automatically.
+          </p>
+        </div>
+        <aside class="notes">
+          Show attendees that running these tools is painless. The Makefile encapsulates all flags and environment variables.
+        </aside>
+      </section>
+
+      <!-- SLIDE 16: SIDE-BY-SIDE OUTPUTS (CUDA 12 vs 13) -->
+      <section>
+        <span class="badge-pill">Side-by-Side Outputs</span>
+        <h2>Terminal Telemetry: CUDA 12 vs. CUDA 13</h2>
+        <h3 style="font-size: 0.95em; color: #94a3b8;">Real Output from `nsys profile --stats=true`</h3>
+
+        <div class="side-by-side" style="margin-top: 15px;">
+          <div>
+            <div class="terminal-header">CUDA 12.x Output (Hopper / Ada)</div>
+            <div class="terminal-box">
+Time(%) Total Time(ns) Num Calls  Name<br>
+------- -------------- ---------  -----------------------<br>
+ <span class="highlight-red">68.4%</span>    152,410,290       500  cudaStreamSynchronize<br>
+ 24.1%     53,712,010       500  cudaLaunchKernel<br>
+  7.2%     16,045,900       100  cudaMemcpyAsync (H2D)<br>
+<br>
+** Kernel Summary **<br>
+ 71.2%     38,242,944       500  gemm_cuda_naive<br>
+ 28.8%     15,469,066       500  gemm_cuda_shared_tiled
+            </div>
+          </div>
+          <div>
+            <div class="terminal-header">CUDA 13.x Output (Blackwell / Modern)</div>
+            <div class="terminal-box">
+Time(%) Duration(ms) Calls  Subsystem Target   Name<br>
+------- ------------ -----  -----------------  -----------------------<br>
+ <span class="highlight-red">64.2%</span>       142.180   500  [HOST STALL]       cudaStreamSynchronize<br>
+ 26.5%        58.620   500  SM / Grid Launch   cudaLaunchKernel<br>
+  8.9%        19.700   100  NVLink / PCIe      cudaMemcpyAsync<br>
+<br>
+** Workload Execution Summary **<br>
+ 73.5%        43.089   500  SM / Global DRAM   gemm_cuda_naive<br>
+ 26.5%        15.531   500  SM / Shared Tile   gemm_cuda_shared_tiled
+            </div>
+          </div>
+        </div>
+
+        <div class="card-box" style="margin-top: 12px; text-align: left; padding: 10px 16px;">
+          <p style="font-size: 0.8em;">
+            🔍 <strong>How to Read Both:</strong> In both versions, <strong>Line 1 is the smoking gun</strong>! <code>cudaStreamSynchronize</code> takes ~65-68% of time. Tiled shared memory kernel cuts GPU time by <strong>2.5x</strong> (from 38ms to 15ms).
+          </p>
+        </div>
+        <aside class="notes">
+          Walk through the side-by-side terminal boxes. Show how easy it is to spot the bottleneck in both versions.
+        </aside>
+      </section>
+
+      <!-- SLIDE 17: PYTORCH SMOKING GUN -->
+      <section>
+        <span class="badge-pill badge-green">Live Case Study</span>
+        <h2>The 86.2% Smoking Gun in PyTorch</h2>
+        <h3 style="font-size: 1.0em; color: #f87171;">The Innocent-Looking Line That Stalls Your GPU</h3>
+
+        <div class="card-box" style="text-align: left; margin-top: 15px;">
+          <pre><code class="language-python"># Unoptimized Mandelbrot loop in PyTorch
+for _ in range(max_iter):
+    z[mask] = z[mask]**2 + c[mask]
+    mask = mask & (torch.abs(z) <= 2.0)
+    if not mask.any():   # <-- THE 86% SMOKING GUN!
         break</code></pre>
         </div>
-        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.75em; text-align: left;">
-          <p>📊 <strong>PyTorch Profiler Telemetry:</strong></p>
-          <p>• <code>aten::_local_scalar_dense</code> consumed <strong style="color: #ef4444;">86.2%</strong> of total execution time (265.4 ms)!</p>
-          <p>• Calling <code>.any()</code> forced the CPU to halt and wait for the GPU on every single iteration.</p>
-          <p>• <strong>Intervention:</strong> Removing the check and running in batch mode sped up PyTorch by <strong>4.8x</strong>!</p>
-        </div>
-        <aside class="notes">
-          This is a classic trap in accelerated computing.
-          The developer added 'if not mask.any(): break' to save iterations. But checking the tensor condition in Python required pulling a boolean over PCIe, destroying GPU pipelining.
-        </aside>
-      </section>
 
-      <!-- SLIDE 18: TELEMETRY CASE STUDY 3: WARP DIVERGENCE -->
-      <section>
-        <span class="badge-pill">Case Study 3</span>
-        <h2>Telemetry Discovery: Warp Divergence</h2>
-        <div class="card-box">
-          <h4>Visualizing SIMD / Warp Masking</h4>
-          <pre style="font-size: 0.65em; color: #38bdf8;">
-Warp Thread: [T00] [T01] [T02] [T03] ... [T28] [T29] [T30] [T31]
-Iterations:    2     2     2     2   ...   2     2     2    500
-Cycle 1-2:   [ACT] [ACT] [ACT] [ACT] ... [ACT] [ACT] [ACT] [ACT]  (100% Active)
-Cycle 3-500: [OFF] [OFF] [OFF] [OFF] ... [OFF] [OFF] [OFF] [ACT]  (3.1% Active!)
-          </pre>
-          <p style="font-size: 0.8em; margin-top: 10px;">
-            In NVIDIA Nsight Compute (<code>ncu</code>), this shows up as <strong>"Warp Stall: Wait on Divergent Branch"</strong>.
+        <div class="terminal-box" style="margin-top: 15px;">
+-------------------------------------------------------  ------------  ------------<br>
+                                                   Name    Self CPU %      Self CPU<br>
+-------------------------------------------------------  ------------  ------------<br>
+                              <span class="highlight-red">aten::_local_scalar_dense</span>        <span class="highlight-red">86.21%</span>     <span class="highlight-red">265.420ms</span><br>
+                                            aten::where         4.12%      12.690ms<br>
+                                              aten::mul         3.20%       9.850ms<br>
+-------------------------------------------------------  ------------  ------------
+        </div>
+
+        <div class="card-box" style="margin-top: 12px; text-align: left; border-left: 3px solid #f87171;">
+          <p style="font-size: 0.82em;">
+            📞 <strong>The "Are We There Yet?" Problem:</strong> Evaluating <code>mask.any()</code> forces the GPU to halt, serialize its pipeline, and send 1 boolean byte over PCIe to the CPU 500 times in a row!
           </p>
         </div>
-        <div style="text-align: left; font-size: 0.78em; margin-top: 15px;">
-          <p>• <strong>Impact:</strong> Achieved SM Occupancy plummeted to under 25%.</p>
-          <p>• <strong>Remedy:</strong> Dynamic scanline grouping and dual-point unrolling balances loop depths across neighboring warp lanes.</p>
-        </div>
         <aside class="notes">
-          In GPU computing, all 32 threads in a warp share one instruction pointer.
-          If threads take different branch targets, the GPU must execute both paths sequentially, disabling threads that aren't on that path.
+          This is one of the most common pitfalls in scientific PyTorch code. Attendees will recognize this pattern immediately in their own scripts.
         </aside>
       </section>
 
-      <!-- SLIDE 19: OPTIMIZATION 1: SHARED MEMORY TILING -->
+      <!-- SLIDE 18: SCALENE TELEMETRY -->
       <section>
-        <span class="badge-pill">Optimization Tier 1</span>
-        <h2>Shared Memory Tiling & Coalescing</h2>
-        <div class="card-grid">
+        <span class="badge-pill">Live Case Study</span>
+        <h2>Scalene: Finding the Python Tax</h2>
+        <h3 style="font-size: 1.0em;">Where Does the Interpreter Steal Your Time?</h3>
+
+        <div class="terminal-box" style="margin-top: 20px;">
+src/gemm/gemm_cpu.py: % of time = 98.42% out of 0.35s.<br>
+--------------------------------------------------------------------------------<br>
+Python % | Native % | Line # and Code<br>
+-------- | -------- | ----------------------------------------------------------<br>
+    --   |     --   |  18: def gemm_python_naive(A, B):<br>
+  1.2%   |   0.0%   |  19:     for i in range(N):<br>
+  4.5%   |   0.0%   |  20:         for j in range(N):<br>
+ <span class="highlight-red">84.6%</span>   |   0.0%   |  21:             <span class="highlight-red">for k in range(N):</span><br>
+         |          |  22:                 s += A[i][k] * B[k][j]<br>
+--------------------------------------------------------------------------------
+        </div>
+
+        <div class="card-box" style="margin-top: 20px; text-align: left;">
+          <p style="font-size: 0.85em;">
+            🎯 <strong>The Action:</strong> Line 21 has <strong>84.6% Python time</strong> and <strong>0% Native time</strong>.<br>
+            By adding <code>@numba.njit(parallel=True)</code>, Numba compiles this loop directly to machine vector instructions. Runtime drops from <strong>310 ms</strong> to <strong>0.20 ms</strong>!
+          </p>
+        </div>
+        <aside class="notes">
+          Scalene's visual split between Python % and Native % makes it obvious when you should use a JIT compiler or vectorization.
+        </aside>
+      </section>
+
+      <!-- SLIDE 19: MEMRAY TELEMETRY -->
+      <section>
+        <span class="badge-pill">Live Case Study</span>
+        <h2>Memray: Spotting Object Allocation Churn</h2>
+        <h3 style="font-size: 1.0em;">Why Memory Layout Trumps Raw Math</h3>
+
+        <div class="terminal-box" style="margin-top: 20px;">
+Rank  Peak Memory  Total Memory  Allocations  Function Location<br>
+----  -----------  ------------  -----------  ---------------------------------------<br>
+   1     10.24 MB      10.24 MB            2  gemm_cpu.py:17 (List comprehension)<br>
+   2      1.57 MB      32.40 MB      <span class="highlight-red">262,144</span>  gemm_cpu.py:22 (Float object boxing)<br>
+   3      0.52 MB       4.12 MB          180  run_gemm.py:45 (Benchmark harness setup)
+        </div>
+
+        <div class="side-by-side" style="margin-top: 20px;">
           <div class="card-box">
-            <h4>Global Memory (Naive)</h4>
-            <p>Every element read comes from high-latency DRAM.</p>
-            <p style="color: #ef4444; font-weight: 600;">$2N^3$ DRAM read transactions!</p>
-          </div>
-          <div class="card-box">
-            <h4>Shared Memory Tiling (SRAM)</h4>
-            <p>Load $B \times B$ tile into on-chip cache; synchronize and reuse data $B$ times.</p>
-            <p style="color: #4ade80; font-weight: 600;">Reduces DRAM traffic by $B\times$ (16x)!</p>
-          </div>
-        </div>
-        <pre><code class="language-cuda">__shared__ float sA[TILE_DIM][TILE_DIM];
-__shared__ float sB[TILE_DIM][TILE_DIM];
-// Load once, reuse TILE_DIM times across block threads
-sA[ty][tx] = A[row * N + aCol];
-sB[ty][tx] = B[bRow * N + col];
-__syncthreads();
-for (int k = 0; k < TILE_DIM; ++k) acc += sA[ty][k] * sB[k][tx];</code></pre>
-        <aside class="notes">
-          Shared memory on NVIDIA GPUs has over 15 TB/s aggregate bandwidth.
-          By staging data in shared memory tiles, we reuse each float 16 times, turning a memory-bound kernel into a compute-bound powerhouse.
-        </aside>
-      </section>
-
-      <!-- SLIDE 20: OPTIMIZATION 2: WARP BALANCING -->
-      <section>
-        <span class="badge-pill">Optimization Tier 2</span>
-        <h2>Warp Balancing & Branch Mitigation</h2>
-        <div class="card-box">
-          <h4>From 2D Block to 1D Grid Stride with Dual-Point ILP</h4>
-          <pre><code class="language-cuda">// Unroll 2 pixels per thread: Hides FMA pipeline latency & balances warps
-int col = (blockIdx.x * blockDim.x + threadIdx.x) * 2;
-// Process Point 1 and Point 2 concurrently in registers
-float cx1 = xmin + col * dx;
-float cx2 = xmin + (col + 1) * dx;
-// Compiler generates independent dual-issue arithmetic instructions!</code></pre>
-        </div>
-        <div class="card-grid" style="margin-top: 15px;">
-          <div class="card-box">
-            <p>• <strong>Throughput Gain:</strong> Increased Mandelbrot throughput from 92 Mpix/s to <strong>216.5 Mpix/s</strong> ($2.35\times$ speedup).</p>
-          </div>
-          <div class="card-box">
-            <p>• <strong>Hardware Benefit:</strong> Higher instruction-level parallelism (ILP) saturates arithmetic pipelines when memory is idle.</p>
-          </div>
-        </div>
-        <aside class="notes">
-          By having each thread calculate two points simultaneously, we increase instruction-level parallelism.
-          The compiler can interleave operations on point 1 with operations on point 2, hiding arithmetic latency.
-        </aside>
-      </section>
-
-      <!-- SLIDE 21: OPTIMIZATION 3: ASYNCHRONOUS PIPELINING -->
-      <section>
-        <span class="badge-pill">Optimization Tier 3</span>
-        <h2>Asynchronous Stream Pipelining</h2>
-        <p style="font-size: 0.85em; color: #94a3b8;">Hiding PCIe transfers behind active computation.</p>
-        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; padding: 15px; border-radius: 8px; font-size: 0.72em; text-align: left;">
-          <p><strong>Synchronous Execution (Serialization):</strong></p>
-          <pre style="margin: 0; color: #f87171;">[H2D Copy Chunk 1] -> [Kernel Chunk 1] -> [D2H Copy Chunk 1] -> [H2D Chunk 2]...</pre>
-          <p style="margin-top: 10px;"><strong>Asynchronous Multi-Stream Pipelining:</strong></p>
-          <pre style="margin: 0; color: #4ade80;">Stream 1: [H2D Chunk 1] -> [Kernel Chunk 1] -> [D2H Chunk 1]
-Stream 2:                  [H2D Chunk 2]    -> [Kernel Chunk 2] -> [D2H Chunk 2]</pre>
-        </div>
-        <ul style="font-size: 0.78em; margin-top: 15px; line-height: 1.6;">
-          <li>Requires <strong>Pinned Host Memory</strong> (<code>cudaHostAlloc</code>) to allow hardware DMA controllers to access RAM without CPU intervention.</li>
-          <li>Completely overlaps memory transit with arithmetic execution.</li>
-        </ul>
-        <aside class="notes">
-          In high-throughput video or stream processing, never do synchronous copies.
-          Using multiple CUDA streams with pinned memory allows the GPU DMA copy engine and the SM compute engine to run simultaneously.
-        </aside>
-      </section>
-
-      <!-- SLIDE 22: MASTER BENCHMARK MATRIX -->
-      <section>
-        <span class="badge-pill">Empirical Results</span>
-        <h2>Master Cross-Backend Benchmark</h2>
-        <p style="font-size: 0.75em; color: #94a3b8;">Empirical performance measured across all 6 backends on identical silicon:</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Workload</th>
-              <th>Backend Tier</th>
-              <th>Latency (ms)</th>
-              <th>Throughput</th>
-              <th>Speedup</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>GEMM (512x512)</strong></td>
-              <td>Pure Python (i-j-k)</td>
-              <td>2,480.0 ms</td>
-              <td>0.11 GFLOPS</td>
-              <td>1.00x</td>
-            </tr>
-            <tr>
-              <td><strong>GEMM (512x512)</strong></td>
-              <td>Numba CPU Parallel</td>
-              <td>1.62 ms</td>
-              <td>165.3 GFLOPS</td>
-              <td style="color: #4ade80; font-weight: bold;">1,530x</td>
-            </tr>
-            <tr>
-              <td><strong>GEMM (512x512)</strong></td>
-              <td>PyTorch CPU / BLAS</td>
-              <td>0.18 ms</td>
-              <td>1,463.9 GFLOPS</td>
-              <td style="color: #4ade80; font-weight: bold;">13,777x</td>
-            </tr>
-            <tr>
-              <td><strong>GEMM (512x512)</strong></td>
-              <td>NVIDIA cuBLAS (Peak)</td>
-              <td>0.10 ms</td>
-              <td>2,684.0 GFLOPS</td>
-              <td style="color: #4ade80; font-weight: bold;">24,800x</td>
-            </tr>
-            <tr>
-              <td><strong>Mandelbrot (512x512)</strong></td>
-              <td>Pure Python</td>
-              <td>640.0 ms</td>
-              <td>0.41 Mpix/s</td>
-              <td>1.00x</td>
-            </tr>
-            <tr>
-              <td><strong>Mandelbrot (512x512)</strong></td>
-              <td>Numba CPU Parallel</td>
-              <td>4.45 ms</td>
-              <td>58.87 Mpix/s</td>
-              <td style="color: #4ade80; font-weight: bold;">143x</td>
-            </tr>
-            <tr>
-              <td><strong>Mandelbrot (512x512)</strong></td>
-              <td>CUDA C (Dual Point)</td>
-              <td>1.21 ms</td>
-              <td>216.50 Mpix/s</td>
-              <td style="color: #4ade80; font-weight: bold;">528x</td>
-            </tr>
-          </tbody>
-        </table>
-        <aside class="notes">
-          Here is our master comparison matrix. Notice the incredible scaling.
-          Numba parallel delivers 143x on CPU, while native CUDA C delivers over 500x acceleration on Mandelbrot.
-        </aside>
-      </section>
-
-      <!-- SLIDE 23: DIAGNOSTIC DECISION TREE -->
-      <section>
-        <span class="badge-pill">Practitioner Guide</span>
-        <h2>The Systems Diagnostic Decision Tree</h2>
-        <div style="font-size: 0.72em; text-align: left; line-height: 1.6;">
-          <div class="card-box" style="margin-bottom: 10px;">
-            <strong>🚨 Symptom: Low GPU Utilization (&lt; 20%)</strong><br>
-            • <em>Profiler Check:</em> <code>nsys</code> shows gaps between kernels.<br>
-            • <em>Prescription:</em> CPU launch queue bottleneck. Batch operations or use CUDA Graphs.
-          </div>
-          <div class="card-box" style="margin-bottom: 10px;">
-            <strong>🚨 Symptom: Kernel Throughput Stuck at &lt; 15% Roofline Peak</strong><br>
-            • <em>Profiler Check:</em> <code>ncu</code> reports $I &lt; I_{\text{ridge}}$ and high DRAM bandwidth.<br>
-            • <em>Prescription:</em> Memory-bound. Tile data into on-chip Shared Memory ($SRAM$).
+            <h4>📦 Python List (Scattered)</h4>
+            <p style="font-size: 0.8em;">
+              Python creates <strong>262,144 individual float objects</strong> scattered across the heap. Each number has a 24-byte pointer wrapper!
+            </p>
           </div>
           <div class="card-box">
-            <strong>🚨 Symptom: Low Warp Occupancy & Stalled SIMD Lanes</strong><br>
-            • <em>Profiler Check:</em> <code>ncu</code> reports branch divergence and inactive thread masks.<br>
-            • <em>Prescription:</em> Rebalance workload; sort inputs by computational complexity.
+            <h4>🚀 Contiguous Tensor (Packed)</h4>
+            <p style="font-size: 0.8em;">
+              NumPy & PyTorch allocate <strong>1 single memory block</strong>. Raw numbers sit tightly packed, letting SIMD units stream data at full speed.
+            </p>
           </div>
         </div>
         <aside class="notes">
-          Save this slide as a quick reference sheet when debugging your own cluster jobs.
-          Match the symptom to the profiler signature to apply the correct intervention.
+          Memray reveals that naive Python spends more time creating and destroying float objects on the heap than doing actual arithmetic.
         </aside>
       </section>
 
-      <!-- SLIDE 24: CONCLUSION & TAKEAWAYS -->
+      <!-- SLIDE 20: FIX 1 (LOOP FLIP) -->
       <section>
-        <span class="badge-pill">Summary</span>
-        <h2>Essential Workshop Takeaways</h2>
-        <div class="card-box" style="margin-top: 25px; line-height: 1.8; text-align: left;">
-          <p>1. <strong>The Profiler Precedes the Optimization:</strong> Never guess where the bottleneck lies. Let hardware performance monitors guide code changes.</p>
-          <p>2. <strong>Memory Hierarchy Dictates Speed:</strong> Compute is practically free; data movement is expensive. 16x shared memory reuse yielded >1,000x real speedups.</p>
-          <p>3. <strong>Beware Synchronous Barriers:</strong> A single <code>.item()</code> or <code>.any()</code> in a loop triggers PCIe stalls that destroy hardware acceleration.</p>
-          <p>4. <strong>Warp Divergence Must Be Managed:</strong> Parallel hardware demands homogeneous control flow across SIMD lanes.</p>
+        <span class="badge-pill badge-green">Optimization 1</span>
+        <h2>Fix 1: The Loop Flip (8.2x Free Speedup)</h2>
+        <h3 style="font-size: 1.0em;">Zero Libraries · Zero C Code · Just Spatial Locality</h3>
+
+        <div class="side-by-side" style="margin-top: 20px;">
+          <div class="card-box">
+            <h4 style="color: #f87171;">❌ Slow: i - j - k Order (310 ms)</h4>
+            <pre><code class="language-python">for i in range(N):
+    for j in range(N):
+        s = 0.0
+        for k in range(N):
+            # B[k][j] reads DOWN columns!
+            # Jumping 4,096 bytes per step!
+            s += A[i][k] * B[k][j]
+        C[i][j] = s</code></pre>
+          </div>
+          <div class="card-box">
+            <h4 style="color: #4ade80;">✅ Fast: i - k - j Order (38 ms)</h4>
+            <pre><code class="language-python">for i in range(N):
+    for k in range(N):
+        r = A[i][k]
+        for j in range(N):
+            # B[k][j] reads ACROSS rows!
+            # 100% Cache Line reuse!
+            C[i][j] += r * B[k][j]</code></pre>
+          </div>
+        </div>
+
+        <div class="card-box" style="margin-top: 15px; text-align: left;">
+          <p style="font-size: 0.85em;">
+            🎉 <strong>Result:</strong> Changing 2 lines of loop order reduced runtime from <strong>310.5 ms to 37.95 ms</strong> — an <strong>8.2x speedup</strong> purely by respecting hardware cache lines!
+          </p>
         </div>
         <aside class="notes">
-          To summarize: hardware acceleration is not magic. It is the disciplined alignment of algorithm access patterns with the physical layout of silicon.
+          This is pure programming gold. No compiler flags, no external libraries. Just changing the loop order gives an 8.2x speedup because row memory is contiguous.
         </aside>
       </section>
 
-      <!-- SLIDE 25: Q&A & REPOSITORY ACCESS -->
+      <!-- SLIDE 21: FIX 2 (ELIMINATING HOST SYNC) -->
+      <section>
+        <span class="badge-pill badge-green">Optimization 2</span>
+        <h2>Fix 2: Eliminating the Host Sync (4.8x Speedup)</h2>
+        <h3 style="font-size: 1.0em;">Let the GPU Run Without Interruption</h3>
+
+        <div class="side-by-side" style="margin-top: 20px;">
+          <div class="card-box">
+            <h4 style="color: #f87171;">❌ Slow: Sync Every Step (308 ms)</h4>
+            <pre><code class="language-python">for _ in range(max_iter):
+    z[mask] = z[mask]**2 + c[mask]
+    mask = mask & (torch.abs(z) <= 2.0)
+    # Stalls GPU pipeline every step!
+    if not mask.any():
+        break</code></pre>
+          </div>
+          <div class="card-box">
+            <h4 style="color: #4ade80;">✅ Fast: Pure Device Vector (63 ms)</h4>
+            <pre><code class="language-python">for _ in range(max_iter):
+    # Pure vectorized where clause
+    z = torch.where(mask, z * z + c, z)
+    # Fast real/imag distance check
+    mask = mask & (z.real**2 + z.imag**2 <= 4.0)
+# Zero host interrupts!</code></pre>
+          </div>
+        </div>
+
+        <div class="card-box" style="margin-top: 15px; text-align: left;">
+          <p style="font-size: 0.85em;">
+            🚀 <strong>Result:</strong> By not asking the GPU "Are we done yet?", runtime dropped from <strong>308.1 ms to 63.8 ms</strong> (<strong>4.8x faster</strong>) on the exact same silicon!
+          </p>
+        </div>
+        <aside class="notes">
+          Show how simple the fix was. Deleting the per-iteration host check removes the 86% bottleneck.
+        </aside>
+      </section>
+
+      <!-- SLIDE 22: FIX 3 (GRID-STRIDE LOOPS) -->
+      <section>
+        <span class="badge-pill badge-green">Optimization 3</span>
+        <h2>Fix 3: Taming the Tour Bus (Warp Load Balancing)</h2>
+        <h3 style="font-size: 1.0em;">Dynamic Grid-Stride Loops in CUDA C</h3>
+
+        <div class="side-by-side" style="margin-top: 20px;">
+          <div class="card-box">
+            <h4 style="color: #f87171;">❌ 2D Static Mapping (14% Efficiency)</h4>
+            <pre><code class="language-cpp">// Each thread gets 1 fixed pixel
+int x = blockIdx.x * blockDim.x + threadIdx.x;
+int y = blockIdx.y * blockDim.y + threadIdx.y;
+// If pixel escapes early, thread sits IDLE
+// for 498 clock cycles!</code></pre>
+          </div>
+          <div class="card-box">
+            <h4 style="color: #4ade80;">✅ 1D Grid-Stride Loop (68% Efficiency)</h4>
+            <pre><code class="language-cpp">// Threads dynamically stride through grid
+int tid = blockIdx.x * blockDim.x + threadIdx.x;
+int stride = blockDim.x * gridDim.x;
+for (int i = tid; i < total_pixels; i += stride) {
+    compute_pixel(i); // Workload shared!
+}</code></pre>
+          </div>
+        </div>
+
+        <div class="card-box" style="margin-top: 15px; text-align: left;">
+          <p style="font-size: 0.85em;">
+            ⚡ <strong>Result:</strong> Active threads per warp jumped from <strong>4.5 to 21.9</strong>. Throughput increased from <strong>92 to 216 Mpix/s</strong>!
+          </p>
+        </div>
+        <aside class="notes">
+          Grid-stride loops are standard best practice in CUDA. They decouple thread counts from problem size and balance irregular workloads.
+        </aside>
+      </section>
+
+      <!-- SLIDE 23: MASTER BENCHMARK SCOREBOARD -->
+      <section>
+        <span class="badge-pill badge-purple">Empirical Results</span>
+        <h2>The Master Benchmark Scoreboard</h2>
+        <h3 style="font-size: 1.0em;">From Naive Python to Silicon Peak Ceiling</h3>
+
+        <div style="font-size: 0.72em; margin-top: 20px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Implementation / Runtime</th>
+                <th>Time (ms)</th>
+                <th>Throughput</th>
+                <th>Relative Speedup</th>
+                <th>Optimization Applied</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Pure Python ($i-j-k$)</strong></td>
+                <td>310.50 ms</td>
+                <td>0.11 GFLOPS</td>
+                <td><span style="color: #94a3b8;">1.0x</span></td>
+                <td>Baseline unoptimized code</td>
+              </tr>
+              <tr>
+                <td><strong>Pure Python ($i-k-j$)</strong></td>
+                <td>37.95 ms</td>
+                <td>0.88 GFLOPS</td>
+                <td><span class="highlight-green">8.2x</span></td>
+                <td>Loop interchange (Cache line locality)</td>
+              </tr>
+              <tr>
+                <td><strong>Numba CPU (Serial)</strong></td>
+                <td>1.28 ms</td>
+                <td>26.13 GFLOPS</td>
+                <td><span class="highlight-green">241.8x</span></td>
+                <td>LLVM machine compilation</td>
+              </tr>
+              <tr>
+                <td><strong>Numba CPU (Parallel, 10 Cores)</strong></td>
+                <td>0.20 ms</td>
+                <td>165.25 GFLOPS</td>
+                <td><span class="highlight-green">1,529.5x</span></td>
+                <td>Multi-core thread scaling</td>
+              </tr>
+              <tr>
+                <td><strong>PyTorch CPU (Vectorized BLAS)</strong></td>
+                <td>0.052 ms</td>
+                <td>645.10 GFLOPS</td>
+                <td><span class="highlight-green">5,971.1x</span></td>
+                <td>SIMD vector units saturated</td>
+              </tr>
+              <tr style="background: rgba(56, 189, 248, 0.15);">
+                <td><strong>Hardware BLAS (MPS / CUDA)</strong></td>
+                <td><strong>0.023 ms</strong></td>
+                <td><strong>1,460.00 GFLOPS</strong></td>
+                <td><span class="metric-highlight">13,700.0x</span></td>
+                <td>Hardware Roofline Peak Ceiling</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="notes">
+          Highlight the progression: 310 ms down to 0.023 ms. Over 13,000x speedup achieved systematically using profiling tools.
+        </aside>
+      </section>
+
+      <!-- SLIDE 24: THE 1-PAGE DIAGNOSTIC FLOWCHART -->
+      <section>
+        <span class="badge-pill">Cheat Sheet</span>
+        <h2>The 1-Page Diagnostic Decision Matrix</h2>
+        <h3 style="font-size: 1.0em;">Keep this on your desk when profiling any project</h3>
+
+        <div class="card-grid" style="margin-top: 20px; font-size: 0.85em;">
+          <div class="card-box" style="border-left: 4px solid #f87171;">
+            <h4 style="color: #f87171;">If You See This Telemetry:</h4>
+            <p style="margin-bottom: 8px;">• High <code>_local_scalar_dense</code> or <code>.item()</code></p>
+            <p style="margin-bottom: 8px;">• Scalene shows 80%+ Python time</p>
+            <p style="margin-bottom: 8px;">• Low Warp Efficiency (< 50%) in <code>ncu</code></p>
+            <p style="margin-bottom: 8px;">• Low memory bandwidth / high cache misses</p>
+            <p>• White gaps on <code>nsys</code> timeline</p>
+          </div>
+          <div class="card-box" style="border-left: 4px solid #4ade80;">
+            <h4 style="color: #4ade80;">Apply This Targeted Fix:</h4>
+            <p style="margin-bottom: 8px;">👉 Delete host sync; keep tensors on device</p>
+            <p style="margin-bottom: 8px;">👉 Add <code>@numba.njit(parallel=True)</code></p>
+            <p style="margin-bottom: 8px;">👉 Use 1D grid-stride loops</p>
+            <p style="margin-bottom: 8px;">👉 Flip loop order or tile shared memory</p>
+            <p>👉 Use CUDA streams or CUDA graphs</p>
+          </div>
+        </div>
+        <aside class="notes">
+          Attendees can take a photo of this slide. It is their practical cheatsheet for real-world projects.
+        </aside>
+      </section>
+
+      <!-- SLIDE 25: CONCLUSION & Q&A -->
       <section data-background-gradient="linear-gradient(to bottom right, #090d16, #0f172a)">
-        <span class="badge-pill badge-green">Open Source & Hands-On Lab</span>
-        <h2>Questions & Discussion</h2>
-        <p style="font-size: 0.9em; color: #cbd5e1; margin-top: 20px;">
-          All code, benchmarks, Makefile targets, and slides are open-source:
-        </p>
-        <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 20px; margin: 25px auto; max-width: 650px;">
-          <p style="font-size: 0.9em; margin: 0 0 10px 0; color: #38bdf8; font-weight: 600;">
-            🔗 GitHub Repository:
-          </p>
-          <p style="font-family: monospace; font-size: 0.85em; margin: 0;">
-            <a href="https://github.com/erolrecep/profiling_hardware_accelerated_computations" target="_blank" style="color: #ffffff; text-decoration: underline;">
-              github.com/erolrecep/profiling_hardware_accelerated_computations
-            </a>
-          </p>
+        <span class="badge-pill badge-green">Workshop Conclusion</span>
+        <h2>Summary & Interactive Q&A</h2>
+        <h3 style="font-size: 1.1em; color: #38bdf8;">The Three Key Takeaways</h3>
+
+        <div class="card-grid-3" style="margin-top: 25px;">
+          <div class="card-box">
+            <h4>1. Measure First</h4>
+            <p style="font-size: 0.8em;">Never optimize on intuition. Let the profiler point to the exact line in red.</p>
+          </div>
+          <div class="card-box">
+            <h4>2. Memory Matters</h4>
+            <p style="font-size: 0.8em;">Most bottlenecks are memory layout and synchronization stalls, not raw math.</p>
+          </div>
+          <div class="card-box">
+            <h4>3. Simple Cures</h4>
+            <p style="font-size: 0.8em;">Flipping a loop or dropping a host sync check often gives 5x to 10x free speedup.</p>
+          </div>
         </div>
-        <p style="font-size: 0.8em; color: #94a3b8; margin-top: 30px;">
-          <strong>Contact:</strong> Dr. Recep Erol | <a href="mailto:re51@rice.edu" style="color: #38bdf8;">re51@rice.edu</a><br>
-          Rice University Center for Research Computing (CRC)
-        </p>
+
+        <div style="margin-top: 35px;">
+          <p style="font-size: 0.85em; color: #cbd5e1;">
+            📦 <strong>GitHub Repository:</strong> <a href="https://github.com/erolrecep/profiling_hardware_accelerated_computations" target="_blank" style="color: #38bdf8;">github.com/erolrecep/profiling_hardware_accelerated_computations</a><br>
+            📖 <strong>Technical Monograph:</strong> <code>Report.md</code> in repository root
+          </p>
+          <h3 style="margin-top: 20px; font-size: 1.4em; color: #ffffff;">Questions & Discussion?</h3>
+        </div>
         <aside class="notes">
-          Thank you all for your attention! The repository is public with full Makefile targets.
-          I encourage everyone to clone it, run the tests, and inspect the flamegraphs on their own machines.
-          Let's open the floor for questions!
+          Thank the audience and open the floor for questions. Mention that all code, tests, and Makefile commands are fully reproducible on the GitHub repository.
         </aside>
       </section>
 
@@ -741,15 +919,14 @@ Stream 2:                  [H2D Chunk 2]    -> [Kernel Chunk 2] -> [D2H Chunk 2]
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
   <script>
     Reveal.initialize({
       hash: true,
       slideNumber: 'c/t',
       transition: 'slide',
-      plugins: [ RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+      plugins: [ RevealHighlight, RevealNotes ]
     });
   </script>
 </body>

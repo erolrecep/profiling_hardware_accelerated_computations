@@ -1,0 +1,26 @@
+================================================================================
+Memray Memory Profiler: Expected Heap Allocation Output
+Command: memray summary telemetry/memray_gemm.bin
+================================================================================
+
+Allocation tracking results:
+Peak memory allocated: 12.84 MB
+Total memory allocated: 48.21 MB
+Total allocations: 262,410
+
+Top 5 functions by peak memory allocation:
+--------------------------------------------------------------------------------
+Rank  Peak Memory  Total Memory  Allocations  Function Location
+--------------------------------------------------------------------------------
+   1     10.24 MB      10.24 MB            2  gemm_cpu.py:17 (List comprehension)
+   2      1.57 MB      32.40 MB      262,144  gemm_cpu.py:22 (Float object boxing)
+   3      0.52 MB       4.12 MB          180  run_gemm.py:45 (Benchmark harness setup)
+   4      0.31 MB       0.85 MB           42  numpy/core/numeric.py:150 (ndarray alloc)
+   5      0.20 MB       0.60 MB           42  rich/console.py:310 (Formatting output)
+--------------------------------------------------------------------------------
+
+>>> WHAT MEMRAY IS TELLING YOU:
+1. Rank 2: 262,144 separate small allocations totaling 32.4 MB were created just to box intermediate float numbers inside the triple-nested Python loop!
+2. In contrast, NumPy and PyTorch allocate a single contiguous block of memory (10.24 MB), eliminating all 262,000 malloc/free calls.
+3. THE ACTION: Use NumPy arrays or PyTorch tensors to keep data contiguous in memory and eliminate heap allocation churn.
+================================================================================

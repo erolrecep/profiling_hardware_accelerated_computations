@@ -1,0 +1,67 @@
+================================================================================
+NVIDIA Nsight Compute (ncu): Expected Kernel Profiling Output
+Command: ncu --set full --kernel-name mandelbrot_kernel ./mandelbrot_benchmark
+================================================================================
+
+--------------------------------------------------------------------------------
+1. UNOPTIMIZED NAIVE KERNEL (mandelbrot_cuda_naive)
+--------------------------------------------------------------------------------
+Target Device: NVIDIA A100-SXM4-80GB (Compute Capability 8.0)
+Workload: 1024x1024 fractal grid, max_iter = 500
+
+Section: GPU Speed of Light Throughput
+--------------------------------------------------------------------------------
+Metric Description                                   Metric Value       Chart
+--------------------------------------------------------------------------------
+DRAM Frequency                                          1.21 GHz
+SM Frequency                                            1.41 GHz
+Elapsed Time                                             9.85 ms
+Compute (SM) Throughput [%]                               12.45%        [##--------]
+DRAM Throughput [%]                                        4.12%        [#---------]
+L1/TEX Cache Throughput [%]                               18.20%        [###-------]
+L2 Cache Throughput [%]                                    7.80%        [#---------]
+--------------------------------------------------------------------------------
+>>> DIAGNOSIS: Neither Compute (12.4%) nor Memory (4.1%) is saturated. The GPU is largely idle! Why?
+
+Section: Warp State & Execution Efficiency (THE SMOKING GUN)
+--------------------------------------------------------------------------------
+Metric Description                                   Metric Value       Threshold
+--------------------------------------------------------------------------------
+Warp Execution Efficiency [%]                             14.28%        CRITICAL (< 50%)
+Avg. Active Threads Per Warp                                4.57        (Ideal: 32.0)
+Avg. Not Predicated Off Threads Per Warp                    4.57        (Ideal: 32.0)
+Eligible Warps Per Scheduler                                0.12        (Under-subscribed)
+Issue Slots No Eligible [%]                                78.40%       (Waiting on instructions)
+--------------------------------------------------------------------------------
+>>> EXPLANATION IN PLAIN ENGLISH:
+Only 4.5 out of 32 threads in each warp are doing useful work on average! 
+27.5 execution units are sitting masked off (idle) every single clock cycle because pixels outside 
+the Mandelbrot set finished early and are waiting for the border pixels to finish all 500 iterations.
+
+
+--------------------------------------------------------------------------------
+2. OPTIMIZED KERNEL WITH 1D GRID-STRIDE + ILP (mandelbrot_cuda_grid_stride)
+--------------------------------------------------------------------------------
+Elapsed Time                                             4.84 ms (2.03x Speedup)
+
+Section: GPU Speed of Light Throughput
+--------------------------------------------------------------------------------
+Metric Description                                   Metric Value       Chart
+--------------------------------------------------------------------------------
+Compute (SM) Throughput [%]                               74.80%        [########--]
+DRAM Throughput [%]                                       18.40%        [##--------]
+L1/TEX Cache Throughput [%]                               64.10%        [######----]
+--------------------------------------------------------------------------------
+
+Section: Warp State & Execution Efficiency
+--------------------------------------------------------------------------------
+Metric Description                                   Metric Value       Threshold
+--------------------------------------------------------------------------------
+Warp Execution Efficiency [%]                             68.42%        HEALTHY (> 60%)
+Avg. Active Threads Per Warp                               21.89        (Up from 4.57!)
+Issue Slots No Eligible [%]                                22.10%       (Down from 78.4%!)
+--------------------------------------------------------------------------------
+>>> OUTCOME:
+By using a 1D grid-stride loop, threads dynamically pick up the next coordinate, diffusing the 
+divergent workload across warps. Average active threads jumped from 4.5 to 21.9, slashing execution time in half!
+================================================================================

@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # NVIDIA Nsight Systems (nsys) Macro-Timeline Profiling Runner
+# Supports both CUDA 12.x and CUDA 13.x toolchains
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OUTPUT_DIR="${ROOT_DIR}/telemetry"
-mkdir -p "${OUTPUT_DIR}"
+EXPECTED_DIR="${OUTPUT_DIR}/expected_outputs"
+mkdir -p "${OUTPUT_DIR}" "${EXPECTED_DIR}"
 
 echo "=========================================================================="
-echo "  [PROFILING] NVIDIA Nsight Systems (nsys): System-Wide Trace"
+echo "  [PROFILING] NVIDIA Nsight Systems (nsys): Macro-Timeline Profiler"
+echo "  Supports CUDA 12.x (Ampere/Hopper) and CUDA 13.x (Blackwell) Environments"
 echo "=========================================================================="
+
+# Detect CUDA version if nvcc is available
+if command -v nvcc &> /dev/null; then
+    CUDA_VER=$(nvcc --version | grep "release" | sed -E 's/.*release ([0-9]+(\.[0-9]+)?).*/\1/')
+    echo ">> Detected CUDA Toolkit Version: ${CUDA_VER}"
+fi
 
 if command -v nsys &> /dev/null; then
     echo ">> NVIDIA nsys binary detected: $(which nsys)"
@@ -49,27 +58,10 @@ if command -v nsys &> /dev/null; then
     echo "Open them in the NVIDIA Nsight Systems GUI to visualize timelines."
 else
     echo ">> NOTE: 'nsys' not found on current host PATH (macOS / non-NVIDIA machine)."
-    echo ">> To run on an NVIDIA GPU cluster (e.g., Rice NOTS / SLURM node):"
+    echo ">> Displaying expected side-by-side telemetry for CUDA 12 vs. CUDA 13..."
     echo ""
-    echo "   1. Compile CUDA C kernels:"
-    echo "      nvcc -O3 -arch=sm_80 -lcublas src/gemm/gemm_cuda.cu -o src/gemm/gemm_cuda"
-    echo "      nvcc -O3 -arch=sm_80 src/mandelbrot/mandelbrot_cuda.cu -o src/mandelbrot/mandelbrot_cuda"
+    cat "${EXPECTED_DIR}/nsys_cuda12_vs_cuda13.txt"
+    cp "${EXPECTED_DIR}/nsys_cuda12_vs_cuda13.txt" "${OUTPUT_DIR}/nsys_gemm_summary.txt"
     echo ""
-    echo "   2. Execute nsys system tracing:"
-    echo "      nsys profile --trace=cuda,nvtx,osrt --stats=true -o telemetry/nsys_gemm src/gemm/gemm_cuda 1024 10"
-    echo ""
-    echo "   3. Export SQLite database or text summaries:"
-    echo "      nsys stats --report gputrace telemetry/nsys_gemm.nsys-rep"
-    echo ""
-    echo ">> Generating mock telemetry summary for workshop pedagogical study..."
-    cat << 'EOF' > "${OUTPUT_DIR}/nsys_gemm_summary.txt"
-** Operating System Runtime Summary (nsys) **
-Time (%)  Total Time (ns)  Num Calls   Avg (ns)    Med (ns)    Min (ns)   Max (ns)    Name
---------  ---------------  ---------  ----------  ----------  ---------  ----------  -------------------------
-   68.4%       14,528,190         10   1,452,819   1,450,110  1,440,020   1,472,100  cudaMemcpy (H2D)
-   18.2%        3,865,100         10     386,510     385,200    381,100     395,400  gemm_shared_tiled_kernel
-    9.1%        1,932,550         10     193,255     192,100    190,050     198,120  cublasSgemm
-    4.3%          912,100         10      91,210      90,500     89,200      95,300  cudaMemcpy (D2H)
-EOF
-    echo "✓ Reference nsys telemetry written to: ${OUTPUT_DIR}/nsys_gemm_summary.txt"
+    echo "✓ Reference side-by-side nsys telemetry written to: ${OUTPUT_DIR}/nsys_gemm_summary.txt"
 fi

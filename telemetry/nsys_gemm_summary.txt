@@ -1,0 +1,68 @@
+================================================================================
+NVIDIA Nsight Systems (nsys): Expected CLI Outputs (CUDA 12 vs. CUDA 13)
+Command: nsys profile --trace=cuda,nvtx,osrt --stats=true ./gemm_benchmark
+================================================================================
+
+--------------------------------------------------------------------------------
+[CUDA 12.x Profile Output: Typical Hopper/Ada/Ampere Cluster Output]
+--------------------------------------------------------------------------------
+Operating System: Linux 5.15.0-89-generic (x86_64)
+CUDA Toolkit: 12.2 (Driver 535.104.05, GPU: NVIDIA A100-SXM4-80GB)
+
+** CUDA API Summary (Top 5 Operations by Duration) **
+ Time (%)  Total Time (ns)  Num Calls   Avg (ns)     Med (ns)     Min (ns)     Max (ns)    Name
+ --------  ---------------  ---------  ----------   ----------   ----------   ----------  ---------------------------
+     68.4      152,410,290        500     304,820      301,210      298,400      380,120  cudaStreamSynchronize
+     24.1       53,712,010        500     107,424      105,800      101,200      145,800  cudaLaunchKernel
+      7.2       16,045,900        100     160,459      158,100      152,300      210,400  cudaMemcpyAsync (H2D)
+      0.3          668,800        100       6,688        6,500        6,200        8,900  cudaEventRecord
+
+** CUDA Kernel Summary (Top Executed GPU Kernels) **
+ Time (%)  Total Time (ns)  Instances   Avg (ns)     Med (ns)     Min (ns)     Max (ns)    Name
+ --------  ---------------  ---------  ----------   ----------   ----------   ----------  ---------------------------
+     71.2       38,242,944        500      76,485       75,120       74,200       85,400  gemm_cuda_naive
+     28.8       15,469,066        500      30,938       30,100       29,800       35,100  gemm_cuda_shared_tiled
+
+** CUDA Memory Operation Summary (by Size & Direction) **
+ Operation       Total (MB)   Count   Avg Size (KB)   Min Size (KB)   Max Size (KB)
+ --------------  ----------   -----   -------------   -------------   -------------
+ [CUDA memcpy HtoD]   100.0     100          1024.0          1024.0          1024.0
+ [CUDA memcpy DtoH]    50.0      50          1024.0          1024.0          1024.0
+
+>>> DIAGNOSTIC TAKEAWAYS (CUDA 12):
+1. Notice `cudaStreamSynchronize` dominates 68.4% of total host time! The CPU is spending most of its time blocked waiting for GPU kernels.
+2. `gemm_cuda_shared_tiled` takes 30.9 microseconds vs 76.5 microseconds for `naive` (a 2.5x speedup inside the GPU).
+
+
+--------------------------------------------------------------------------------
+[CUDA 13.x Profile Output: Next-Gen Blackwell/Hopper Modernized Format]
+--------------------------------------------------------------------------------
+Operating System: Linux 6.8.0-generic (x86_64)
+CUDA Toolkit: 13.0 (Driver 560.35.03, GPU: NVIDIA B200 / H100 NVL)
+Nsight Systems Version: 2026.1+ (Enhanced Tile IR & Unified Cluster Tracking)
+
+** CUDA Runtime API Summary (Hierarchical View) **
+ Time (%)  Duration (ms)  Calls  Avg (us)   Min (us)   Max (us)  API Function (Unified Scope)
+ --------  -------------  -----  --------   --------   --------  --------------------------------
+     64.2        142.180    500   284.360    280.110    350.200  cudaStreamSynchronize [STALL]
+     26.5         58.620    500   117.240    114.100    135.900  cudaLaunchKernel (Grid/Cluster)
+      8.9         19.700    100   197.000    190.200    220.100  cudaMemcpyAsync (H2D)
+      0.4          0.885    100     8.850      8.200     11.400  cudaEventRecord
+
+** GPU Workload Execution Summary (Kernel & Tile IR Dispatch) **
+ Time (%)  Duration (ms)  Instances  Avg (us)   Throughput  Subsystem Target   Kernel Name
+ --------  -------------  ---------  --------   ----------  -----------------  ------------------------
+     73.5         43.089        500    86.178   1.2 TB/s    SM / Global DRAM   gemm_cuda_naive
+     26.5         15.531        500    31.062   4.1 TB/s    SM / Shared Tile   gemm_cuda_shared_tiled
+
+** Unified Memory & PCIe/NVLink Bandwidth Utilization **
+ Channel         Direction   Total Transferred   Effective Bandwidth   Peak Efficiency
+ --------------  ----------  -----------------   -------------------   ---------------
+ NVLink-5        Bi-dir               4.200 GB            812.5 GB/s             90.2%
+ PCIe Gen 5      H2D                  0.100 GB             28.4 GB/s             88.7%
+
+>>> WHAT CHANGED IN CUDA 13:
+1. Cleaner, modernized column metrics: `Duration` is automatically converted to human-readable units (`ms`/`us`) instead of raw nanoseconds.
+2. Subsystem targets are explicitly printed (`SM / Global DRAM` vs `SM / Shared Tile`), making cache and memory stalls immediately obvious.
+3. NVLink and PCIe bus utilization percentages are reported directly without requiring manual math calculations.
+================================================================================

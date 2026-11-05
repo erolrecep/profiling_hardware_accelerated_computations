@@ -125,6 +125,31 @@ The curriculum implements two complementary workload archetypes across **6 compu
 
 ---
 
+### NVIDIA Tooling Guide: Navigating CUDA 12 vs. CUDA 13
+
+In academic and enterprise HPC environments, teams frequently migrate between established **CUDA 12.x clusters** (Hopper H100, Ada Lovelace, Ampere A100) and cutting-edge **CUDA 13.x nodes** (Blackwell B200 / GB200). Understanding how NVIDIA's profiling outputs compare ensures attendees can interpret telemetry without confusion.
+
+#### Side-by-Side Architectural & Telemetry Comparison
+
+| Capability / Attribute | NVIDIA Toolchain in CUDA 12.x | NVIDIA Toolchain in CUDA 13.x |
+| :--- | :--- | :--- |
+| **Target Architectures** | Ampere (sm_80), Ada (sm_89), Hopper (sm_90) | Blackwell (sm_100), Hopper, Vera Rubin |
+| **`nsys` Column Formats** | Raw nanoseconds (`Avg (ns)`, `Total Time (ns)`) | Auto human-readable units (`Avg (us)`, `Duration (ms)`) |
+| **Subsystem Attribution** | Implied via API name (`cudaLaunchKernel`, `cudaMemcpy`) | Explicit target column (`SM / Global DRAM` vs `SM / Shared Tile`) |
+| **Multi-GPU & Interconnect** | Manual bandwidth math from transfer bytes | Direct NVLink-5 / PCIe Gen 5 saturation percentages |
+| **`ncu` Focus** | Tensor Core FP8/FP16, DPX dynamic programming | Time-resolved kernel timelines, Tile IR vs SIMT, Report Merge |
+| **Core Workflow** | **1. `nsys` (Timeline) $\to$ 2. `ncu` (Micro-Kernel)** | **1. `nsys` (Timeline) $\to$ 2. `ncu` (Micro-Kernel)** *(Identical!)* |
+
+#### Pre-Compiled Annotated Output Logs
+The repository provides concrete, formatted expected terminal logs for all profiling tools in `telemetry/expected_outputs/`:
+- 📄 [`telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt`](telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt): Side-by-side annotated CLI output of `nsys profile --stats=true`.
+- 📄 [`telemetry/expected_outputs/ncu_kernel_speed_of_light.txt`](telemetry/expected_outputs/ncu_kernel_speed_of_light.txt): Micro-kernel Speed-of-Light and Warp Execution Efficiency diagnostics.
+- 📄 [`telemetry/expected_outputs/torch_profiler_output.txt`](telemetry/expected_outputs/torch_profiler_output.txt): Operator breakdown uncovering the 86.2% D2H CPU synchronization stall.
+- 📄 [`telemetry/expected_outputs/scalene_output.txt`](telemetry/expected_outputs/scalene_output.txt): Line-by-line colored attribution isolating Python bytecode vs native C time.
+- 📄 [`telemetry/expected_outputs/memray_output.txt`](telemetry/expected_outputs/memray_output.txt): Heap allocation analysis tracking float object boxing.
+
+---
+
 ## Empirical Benchmarks & Profiling Case Studies
 
 ### Benchmark Summary Table

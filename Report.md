@@ -221,6 +221,23 @@ Memray recorded every allocation across the lifecycle of both benchmarks:
 - **GEMM**: Maximum heap allocation remained constant at $3.5\text{ MB}$, demonstrating zero allocation churn in steady-state multiplication.
 - **Mandelbrot (NumPy Active Masking)**: Generated over 26,000 temporary slice and boolean mask allocations ($102\text{ MB}$ total churn). Migrating to in-place preallocated buffers eliminated GC pause overhead.
 
+### 4.4 Profiling Toolchain Evolution: Navigating CUDA 12 vs. CUDA 13
+
+As high-performance computing clusters transition from **CUDA 12.x** (NVIDIA Hopper H100, Ada Lovelace, Ampere A100) to **CUDA 13.x** (NVIDIA Blackwell B200 / GB200, Vera Rubin), developers encounter slight differences in telemetry presentation.
+
+#### Key Evolutions in NVIDIA Profiling Tools:
+1. **Nsight Systems (`nsys`)**:
+   - In CUDA 12.x, CLI summary statistics (`--stats=true`) report metrics in raw nanoseconds (`Avg (ns)`, `Total Time (ns)`).
+   - In CUDA 13.x, execution durations are automatically formatted into human-readable units (`Avg (us)`, `Duration (ms)`), and a dedicated **Subsystem Target** column (`SM / Global DRAM` vs `SM / Shared Tile`) explicitly highlights memory subsystem contention.
+   - CUDA 13.x introduces direct tracing for **Tile IR asynchronous execution** and unified multi-GPU interconnect bandwidth (NVLink-5 and PCIe Gen 5 saturation percentages).
+2. **Nsight Compute (`ncu`)**:
+   - CUDA 12.x emphasizes Tensor Core FP8/FP16 matrix engines and DPX dynamic programming instructions.
+   - CUDA 13.x introduces time-resolved micro-timelines, advanced register-dependency graphs tied to source lines, and multi-GPU report merging utilities.
+3. **The Unbroken Diagnostic Invariant**:
+   - Despite tooling evolutions, the diagnostic workflow remains completely invariant:
+     $$\text{Nsight Systems (Macro-Timeline)} \longrightarrow \text{Nsight Compute (Micro-Kernel Counters)}$$
+   - Concrete, annotated side-by-side terminal logs are provided in [`telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt`](telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt) and [`telemetry/expected_outputs/ncu_kernel_speed_of_light.txt`](telemetry/expected_outputs/ncu_kernel_speed_of_light.txt).
+
 ---
 
 ## 5. Master Empirical Benchmark Matrix
@@ -317,3 +334,4 @@ make profile_torch
 make profile_scalene
 make profile_memray
 ```
+
