@@ -1,0 +1,27 @@
+[project]
+name = "profiling-hardware-accelerated-computations"
+version = "1.0.0"
+description = "A comprehensive benchmark and profiling workshop for CPU, GPU, and Hardware Accelerated Computations"
+authors = [{ name = "Recep Erol, PhD", email = "re51@rice.edu" }]
+requires-python = ">=3.12"
+readme = "README.md"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=2.0.0",
+    "numba>=0.60.0",
+    "torch>=2.2.0",
+    "pytest>=8.0.0",
+    "scalene>=2.4.0",
+    "memray>=1.15.0",
+    "rich>=13.0.0",
+    "tabulate>=0.9.0",
+    "matplotlib>=3.8.0"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
