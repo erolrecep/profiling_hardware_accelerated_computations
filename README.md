@@ -6,12 +6,14 @@
 [![CUDA C](https://img.shields.io/badge/CUDA-12.0+-76b900.svg)](https://developer.nvidia.com/cuda-zone)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![GitHub Pages](https://img.shields.io/badge/Presentation-Reveal.js-orange.svg)](https://erolrecep.github.io/profiling_hardware_accelerated_computations/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/erolrecep/profiling_hardware_accelerated_computations/blob/main/notebooks/cuda_profiling_colab_workshop.ipynb)
 
 > **A publication-grade, half-day technical workshop on diagnosing hardware bottlenecks, demystifying CPU/GPU profiling tools, and systematically driving implementations to the theoretical Roofline peak.**
 
 Authored by **Dr. Recep Erol** ([Rice University Center for Research Computing](https://crc.rice.edu))  
 GitHub: [erolrecep/profiling_hardware_accelerated_computations](https://github.com/erolrecep/profiling_hardware_accelerated_computations)  
-Interactive 25-Slide Deck: [Live Keynote Presentation](https://erolrecep.github.io/profiling_hardware_accelerated_computations/)
+Interactive 25-Slide Deck: [Live Keynote Presentation](https://erolrecep.github.io/profiling_hardware_accelerated_computations/)  
+Interactive Cloud Lab: [Open in Google Colab](https://colab.research.google.com/github/erolrecep/profiling_hardware_accelerated_computations/blob/main/notebooks/cuda_profiling_colab_workshop.ipynb)
 
 ---
 
@@ -22,12 +24,16 @@ Interactive 25-Slide Deck: [Live Keynote Presentation](https://erolrecep.github.
    - [Workload A: Dense General Matrix Multiplication (GEMM)](#workload-a-dense-general-matrix-multiplication-gemm)
    - [Workload B: Mandelbrot Set Fractal Generation](#workload-b-mandelbrot-set-fractal-generation)
 3. [The Profiling Suite & Diagnostic Toolkit](#the-profiling-suite--diagnostic-toolkit)
+   - [NVIDIA Tooling Guide: Navigating CUDA 12 vs. CUDA 13](#nvidia-tooling-guide-navigating-cuda-12-vs-cuda-13)
+   - [Visual Profiler Gallery: What to Expect When Replicating](#visual-profiler-gallery-what-to-expect-when-replicating)
 4. [Empirical Benchmarks & Profiling Case Studies](#empirical-benchmarks--profiling-case-studies)
-   - [Benchmark Summary Table](#benchmark-summary-table)
-   - [Case Study 1: The Device-to-Host (D2H) Synchronization Trap](#case-study-1-the-device-to-host-d2h-synchronization-trap)
-   - [Case Study 2: Warp Divergence in SIMT Fractal Rendering](#case-study-2-warp-divergence-in-simt-fractal-rendering)
-   - [Case Study 3: Cache Strides & Spatial Locality](#case-study-3-cache-strides--spatial-locality)
 5. [The Systems Diagnostic Decision Tree](#the-systems-diagnostic-decision-tree)
+6. [Quick Start & Turnkey Makefile Reference](#quick-start--turnkey-makefile-reference)
+7. [SLURM Cluster Deployment (HPC Environments)](#slurm-cluster-deployment-hpc-environments)
+8. [Online Cloud GPU Testing Platforms: Replicate & Compare for Free](#online-cloud-gpu-testing-platforms-replicate--compare-for-free)
+9. [Automated Verification & Parity Testing](#automated-verification--parity-testing)
+10. [Workshop Presentation Deck (Reveal.js)](#workshop-presentation-deck-revealjs)
+11. [Author & Institutional Affiliation](#author--institutional-affiliation)
 6. [Quick Start & Turnkey Makefile Reference](#quick-start--turnkey-makefile-reference)
 7. [Automated Verification & Parity Testing](#automated-verification--parity-testing)
 8. [Workshop Presentation Deck (Reveal.js)](#workshop-presentation-deck-revealjs)
@@ -353,7 +359,79 @@ make setup
 | `make profile_ncu` | Profiles micro-architectural hardware metrics via NVIDIA Nsight Compute. | `telemetry/ncu_gemm.ncu-rep` |
 | `make compile_cuda` | Compiles native CUDA C kernels (`gemm_cuda.cu`, `mandelbrot_cuda.cu`). | `bin/gemm_cuda`, `bin/mandelbrot_cuda` |
 | `make serve_presentation` | Launches a local HTTP server hosting the 25-slide Reveal.js Keynote deck. | `http://localhost:8000/presentation/` |
+| `make snapshots` | Generates high-fidelity profiler GUI snapshots (PNG). | `presentation/images/snapshots/` |
 | `make clean` | Purges compiled binaries, transient trace dumps, and build caches. | Workspace cleaned |
+
+---
+
+## SLURM Cluster Deployment (HPC Environments)
+
+For academic supercomputing clusters and SLURM workload managers (e.g. Rice University Center for Research Computing NOTS cluster, OLCF, or NERSC), the repository includes a complete suite of production SLURM submission scripts located in [`slurm/`](slurm/):
+
+| Script | Purpose & Scope | Target Hardware & Resources | Output Artifacts |
+| :--- | :--- | :--- | :--- |
+| [`slurm/01_test_parity.slurm`](slurm/01_test_parity.slurm) | Runs PyTest parity suite across all backends | 1 GPU, 8 CPUs, 32GB RAM, 20 mins | `slurm/logs/test_parity_<jobid>.out` |
+| [`slurm/02_benchmark_all.slurm`](slurm/02_benchmark_all.slurm) | Compiles CUDA and executes scaling sweeps | 1 GPU, 8 CPUs, 32GB RAM, 30 mins | Benchmark telemetry tables & PNG charts |
+| [`slurm/03_profile_nsys.slurm`](slurm/03_profile_nsys.slurm) | Runs NVIDIA Nsight Systems timeline trace | 1 GPU, 8 CPUs, 32GB RAM, 30 mins | `telemetry/*.nsys-rep` + CLI summary |
+| [`slurm/04_profile_ncu.slurm`](slurm/04_profile_ncu.slurm) | Runs NVIDIA Nsight Compute micro-counters | 1 GPU, 8 CPUs, 32GB RAM, 30 mins | `telemetry/*.ncu-rep` + Speed-of-Light |
+| [`slurm/05_profile_frameworks.slurm`](slurm/05_profile_frameworks.slurm) | PyTorch Profiler, Scalene, and Memray | 1 GPU, 8 CPUs, 32GB RAM, 30 mins | Perfetto JSON traces & HTML flamegraphs |
+| [`slurm/submit_all.sh`](slurm/submit_all.sh) | Master orchestrator with dependency chaining | Automated dependency submission | Submits all 5 jobs in pipeline |
+
+### Submitting to SLURM
+Submit individual jobs or trigger the entire pipeline with automated dependency chaining:
+```bash
+# Option A: Submit individual job
+sbatch slurm/03_profile_nsys.slurm
+
+# Option B: Submit entire orchestrated pipeline
+./slurm/submit_all.sh
+
+# Monitor active jobs in queue
+squeue -u $USER
+
+# Follow live job output logs
+tail -f slurm/logs/*.out
+```
+
+---
+
+## Online Cloud GPU Testing Platforms: Replicate & Compare for Free
+
+If you do not have immediate access to a physical NVIDIA GPU or an HPC cluster account, you can replicate every single benchmark and profiler command online using these cloud environments:
+
+### 1. Google Colab (Recommended — Free Tier Available)
+- **Cost**: Free (NVIDIA Tesla T4 GPU) or \$10/mo Colab Pro (NVIDIA A100 / L4).
+- **Pre-Installed Tools**: `nvcc`, `nsys` (Nsight Systems), `ncu` (Nsight Compute), Python 3.10+, and PyTorch with CUDA are pre-installed in the Linux runtime!
+- **Interactive Notebook**: Open the official workshop notebook in one click:  
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/erolrecep/profiling_hardware_accelerated_computations/blob/main/notebooks/cuda_profiling_colab_workshop.ipynb)
+- **Replication Workflow on Colab**:
+  ```bash
+  # 1. Clone repository
+  !git clone https://github.com/erolrecep/profiling_hardware_accelerated_computations.git
+  %cd profiling_hardware_accelerated_computations
+
+  # 2. Compile native CUDA kernels
+  !nvcc -O3 -arch=native -lcublas src/gemm/gemm_cuda.cu -o src/gemm/gemm_cuda
+
+  # 3. Run live Nsight Systems trace
+  !nsys profile --trace=cuda,osrt --stats=true ./src/gemm/gemm_cuda 1024 10
+
+  # 4. Run live Nsight Compute kernel counters
+  !ncu --section SpeedOfLight --section WarpStateStats ./src/gemm/gemm_cuda 1024 1
+  ```
+- **Downloading & Comparing**: You can download the generated `.nsys-rep` and `.ncu-rep` files directly from Colab to your laptop, open them in the free local desktop applications ([NVIDIA Nsight Systems UI](https://developer.nvidia.com/nsight-systems) & [NVIDIA Nsight Compute UI](https://developer.nvidia.com/nsight-compute)), and compare them directly against our reference snapshots in `telemetry/snapshots/`!
+
+### 2. Kaggle Notebooks (Free)
+- **Cost**: Free (30 hours of NVIDIA GPU per week, Tesla T4 x 2 or P100).
+- **Environment**: Includes bash terminal access, `nvcc`, and PyTorch CUDA.
+
+### 3. Lightning AI (Lightning Studios)
+- **Cost**: Free tier includes monthly GPU credits.
+- **Environment**: Provides an in-browser VS Code desktop with terminal, root access, and web preview.
+
+### 4. Low-Cost Cloud Workstations (RunPod / Lambda Labs / Vast.ai)
+- **Cost**: \$0.20 – \$0.75 per hour for an RTX 4090 or A100.
+- **Unique Feature**: Provides a **Web Desktop (VNC)** where you can launch `nsys-ui` and `ncu-ui` directly in your browser without downloading traces locally.
 
 ---
 

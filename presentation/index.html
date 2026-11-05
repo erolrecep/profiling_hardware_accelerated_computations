@@ -529,34 +529,46 @@ memray flamegraph \
         </aside>
       </section>
 
-      <!-- SLIDE 15: HANDS-ON MAKEFILE -->
+      <!-- SLIDE 15: HANDS-ON MAKEFILE, SLURM & CLOUD -->
       <section>
         <span class="badge-pill badge-green">Hands-On Practice</span>
-        <h2>Hands-On: The Turnkey Makefile</h2>
-        <h3 style="font-size: 1.0em;">One Simple Command for Every Workshop Step</h3>
+        <h2>Hands-On: Makefile, SLURM & Cloud</h2>
+        <h3 style="font-size: 1.0em;">Run Locally, on HPC Clusters, or Free in Google Colab</h3>
 
-        <div class="card-grid" style="margin-top: 25px;">
-          <div class="card-box">
-            <h4>🧪 Benchmarks & Tests</h4>
-            <pre><code class="language-bash">make setup          # Setup uv venv
-make test           # Run 10 parity tests
-make benchmark_all  # Run scaling sweep</code></pre>
+        <div class="card-grid-3" style="margin-top: 20px;">
+          <div class="step-card">
+            <h4 style="color: #4ade80;">💻 Local Workstation</h4>
+            <pre><code class="language-bash">make setup
+make test
+make benchmark_all
+make snapshots</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Runs automatically on Apple Silicon MPS or local Linux GPU.</p>
           </div>
-          <div class="card-box">
-            <h4>🔬 Profiling Diagnostics</h4>
-            <pre><code class="language-bash">make profile_torch   # PyTorch trace
-make profile_scalene # Scalene report
-make profile_memray  # HTML flamegraph
-make profile_nsys    # CUDA 12/13 trace</code></pre>
+          <div class="step-card">
+            <h4 style="color: #38bdf8;">🏛️ SLURM HPC Clusters</h4>
+            <pre><code class="language-bash"># Submit full pipeline
+./slurm/submit_all.sh
+
+# Or single job
+sbatch slurm/03_profile_nsys.slurm</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Tested on Rice NOTS cluster with CUDA 12 / 13.</p>
+          </div>
+          <div class="step-card">
+            <h4 style="color: #c084fc;">☁️ Free Google Colab</h4>
+            <pre><code class="language-bash"># 1-Click Interactive Lab:
+Open in Colab Badge
+# Free T4 / A100 GPU
+# nsys, ncu pre-installed!</code></pre>
+            <p style="font-size: 0.75em; color: #94a3b8;">Zero setup: test CUDA profiling in your browser for $0.</p>
           </div>
         </div>
         <div class="card-box" style="margin-top: 15px; text-align: left;">
           <p style="font-size: 0.85em;">
-            💡 <strong>Zero Setup Frustration:</strong> Everything runs locally on Apple Silicon (MPS/CPU) or on NVIDIA HPC clusters (CUDA) automatically.
+            💡 <strong>Universal Reproducibility:</strong> You can replicate the exact profiling traces and compare your live output with our visual reference snapshots anywhere!
           </p>
         </div>
         <aside class="notes">
-          Show attendees that running these tools is painless. The Makefile encapsulates all flags and environment variables.
+          Show attendees that they don't even need an HPC account to test this. They can open Google Colab, run nsys and ncu, and download the report files directly to their laptop.
         </aside>
       </section>
 
