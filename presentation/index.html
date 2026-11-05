@@ -272,8 +272,25 @@
             </tr>
           </tbody>
         </table>
+
+        <div class="card-grid-3" style="margin-top: 14px;">
+          <div class="step-card" style="border-top: 3px solid #38bdf8; padding: 12px 14px;">
+            <h4 style="color: #38bdf8; font-size: 0.88em; margin-bottom: 4px;">1. Macro First</h4>
+            <p style="font-size: 0.74em; line-height: 1.4;">Run <strong>nsys</strong> or <strong>torch.profiler</strong> to detect host-device stalls and PCIe transfer gaps.</p>
+          </div>
+          <div class="step-card" style="border-top: 3px solid #4ade80; padding: 12px 14px;">
+            <h4 style="color: #4ade80; font-size: 0.88em; margin-bottom: 4px;">2. Micro Second</h4>
+            <p style="font-size: 0.74em; line-height: 1.4;">Zoom into bottleneck kernels with <strong>ncu</strong> to fix warp divergence and memory roofline limits.</p>
+          </div>
+          <div class="step-card" style="border-top: 3px solid #f87171; padding: 12px 14px;">
+            <h4 style="color: #f87171; font-size: 0.88em; margin-bottom: 4px;">3. Python Last</h4>
+            <p style="font-size: 0.74em; line-height: 1.4;">Profile lines and heap with <strong>Scalene</strong> and <strong>Memray</strong> to remove bytecode and boxing churn.</p>
+          </div>
+        </div>
+
+        <p class="nav-prompt">➡️ Press RIGHT to explore NVIDIA Tooling across CUDA 12 vs 13</p>
         <aside class="notes">
-          Walk through the 5 tools. Emphasize that they complement each other. You don't run all 5 at once; you start macro and zoom in.
+          Walk through the 5 tools. Emphasize that they complement each other. You don't run all 5 at once; you follow this 3-tier triage workflow.
         </aside>
       </section>
 
@@ -347,7 +364,7 @@
               </p>
             </div>
           </div>
-          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view GUI Timeline Snapshot & Discussion</p>
+          <p class="nav-prompt">⬇️ Press DOWN to view GUI Timeline Snapshot & Discussion</p>
           <aside class="notes">
             Nsight Systems shows you the big picture. If you see white gaps on the timeline, your GPU is idling while the CPU prepares data.
           </aside>
@@ -357,9 +374,10 @@
           <h2>Nsight Systems: Macro Timeline View</h2>
           <h3>Synchronous Stalls (15.0 ms) vs. Pipelined Asynchronous Overlap (6.3 ms)</h3>
           <img src="images/snapshots/snapshot_nsys_comparison.png" class="slide-snapshot" alt="Nsight Systems Bad vs Good Timeline Snapshot">
-          <p style="font-size: 0.70em; color: #cbd5e1;">
+          <p class="slide-caption">
             Notice the <strong>red host-sync stall bar</strong> and <strong>white GPU idle bubbles</strong> in the baseline, completely resolved by stream concurrency.
           </p>
+          <p class="nav-prompt">⬇️ Press DOWN to view Architectural Discussion</p>
         </section>
         <section>
           <span class="badge-pill">nsys Architectural Discussion</span>
@@ -384,6 +402,7 @@
               </p>
             </div>
           </div>
+          <p class="nav-prompt">➡️ Press RIGHT to advance to Tool 2 (NVIDIA ncu)</p>
           <aside class="notes">
             Explain the hardware reality: DMA transfer engine vs SM compute engine. When you overlap them, memory transfer latency is completely hidden behind computation.
           </aside>
@@ -422,7 +441,7 @@
               </p>
             </div>
           </div>
-          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view GUI Micro-Kernel Snapshot & Discussion</p>
+          <p class="nav-prompt">⬇️ Press DOWN to view GUI Micro-Kernel Snapshot & Discussion</p>
           <aside class="notes">
             Nsight Compute tells you what happens inside the kernel. A low warp efficiency means branch divergence is wasting GPU cycles.
           </aside>
@@ -432,9 +451,10 @@
           <h2>Nsight Compute: Before vs. After Optimization</h2>
           <h3>Warp Efficiency: 14.28% (4.5 / 32) ➔ 68.42% (21.9 / 32) [2.03x Speedup]</h3>
           <img src="images/snapshots/snapshot_ncu_comparison.png" class="slide-snapshot" alt="Nsight Compute Bad vs Good Comparison Snapshot">
-          <p style="font-size: 0.70em; color: #cbd5e1;">
+          <p class="slide-caption">
             Notice how 1D grid-stride loops dynamically redistribute unfinished pixels, quadrupling active threads and halving runtime.
           </p>
+          <p class="nav-prompt">⬇️ Press DOWN to view Architectural Discussion</p>
         </section>
         <section>
           <span class="badge-pill">ncu Architectural Discussion</span>
@@ -459,6 +479,7 @@
               </p>
             </div>
           </div>
+          <p class="nav-prompt">➡️ Press RIGHT to advance to Tool 3 (PyTorch Profiler)</p>
           <aside class="notes">
             Emphasize that the math is 100% identical. The 2x speedup comes solely from balancing thread utilization across the 32-lane SIMT hardware.
           </aside>
@@ -499,7 +520,7 @@
               </p>
             </div>
           </div>
-          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 18px;">⬇️ Press DOWN to view Perfetto Timeline Snapshot & Discussion</p>
+          <p class="nav-prompt">⬇️ Press DOWN to view Perfetto Timeline Snapshot & Discussion</p>
           <aside class="notes">
             PyTorch Profiler is the most accessible tool for AI developers. Finding aten::_local_scalar_dense is an instant lightbulb moment for attendees.
           </aside>
@@ -509,9 +530,10 @@
           <h2>PyTorch Profiler: Before vs. After Optimization</h2>
           <h3>Host Sync Stalls: 86.2% (265.4 ms) ➔ 0.0% (Eliminated!) [4.82x Speedup]</h3>
           <img src="images/snapshots/snapshot_torch_comparison.png" class="slide-snapshot" alt="PyTorch Profiler Bad vs Good Comparison Snapshot">
-          <p style="font-size: 0.70em; color: #cbd5e1;">
+          <p class="slide-caption">
             Notice how deleting the per-iteration host check completely eradicates <code>aten::_local_scalar_dense</code>, unlocking pure GPU acceleration.
           </p>
+          <p class="nav-prompt">⬇️ Press DOWN to view Architectural Discussion</p>
         </section>
         <section>
           <span class="badge-pill">PyTorch Profiler Discussion</span>
@@ -536,6 +558,7 @@
               </p>
             </div>
           </div>
+          <p class="nav-prompt">➡️ Press RIGHT to advance to Tool 4 (Scalene)</p>
           <aside class="notes">
             This is the #1 mistake junior ML engineers make: putting .item() or scalar checks inside training/inference loops. Finding this in a profile is an immediate huge win.
           </aside>
@@ -665,7 +688,7 @@ Open in Colab Badge
           <h3>System Timeline (nsys) vs Micro-Kernel (ncu) vs Framework (torch.profiler)</h3>
           
           <img src="images/snapshots/snapshot_side_by_side_comparison.png" class="slide-snapshot" alt="Side-by-Side Profiler GUI Comparison">
-          <p style="font-size: 0.72em; color: #38bdf8;">⬇️ Press DOWN to view CUDA 12 vs. CUDA 13 CLI terminal tables</p>
+          <p class="nav-prompt">⬇️ Press DOWN to view CUDA 12 vs. CUDA 13 CLI terminal tables</p>
           <aside class="notes">
             This slide gives attendees a single visual guide showing how the 3 primary tools fit together: Macro Timeline, Micro Kernel, and Framework Operator graph.
           </aside>
@@ -712,9 +735,7 @@ Time(%) Duration(ms) Calls  Subsystem Target   Name<br>
               🔍 <strong>How to Read Both:</strong> In both versions, <strong>Line 1 is the smoking gun</strong>! <code>cudaStreamSynchronize</code> takes ~65-68% of time. Tiled shared memory kernel cuts GPU time by <strong>2.5x</strong> (from 38ms to 15ms).
             </p>
           </div>
-          <aside class="notes">
-            Walk through the side-by-side terminal boxes. Show how easy it is to spot the bottleneck in both versions.
-          </aside>
+          <p class="nav-prompt">➡️ Press RIGHT to advance to Case Study 1 (PyTorch Smoking Gun)</p>
         </section>
       </section>
 
@@ -990,6 +1011,12 @@ for (int i = tid; i < total_pixels; i += stride) {
             </tr>
           </tbody>
         </table>
+
+        <div class="card-box" style="margin-top: 14px; text-align: left; background: rgba(34, 197, 94, 0.08); border-left: 4px solid #4ade80;">
+          <p style="font-size: 0.80em; color: #f1f5f9; line-height: 1.4;">
+            💡 <strong>Key Takeaway:</strong> Profiling revealed that <strong>memory access patterns and host syncs</strong> matter far more than raw math. Optimizing memory locality and eliminating CPU stalls delivered over <strong>13,700x total speedup</strong>.
+          </p>
+        </div>
         <aside class="notes">
           Highlight the progression: 310 ms down to 0.023 ms. Over 13,000x speedup achieved systematically using profiling tools.
         </aside>

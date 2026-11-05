@@ -203,10 +203,13 @@
 /* Tables */
 .reveal table {
   font-size: 0.70em;
-  margin: 12px auto;
+  margin: 10px auto;
   border-collapse: collapse;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .reveal table th {
@@ -215,25 +218,49 @@
   padding: 8px 12px;
   border: 1px solid #334155;
   font-weight: 600;
+  text-align: left;
 }
 
 .reveal table td {
-  padding: 7px 12px;
+  padding: 6px 12px;
   border: 1px solid #334155;
   background: rgba(15, 23, 42, 0.6);
   color: #f1f5f9;
+  text-align: left;
+}
+
+.reveal table tr:last-child td {
+  border-bottom: 2px solid #38bdf8;
 }
 
 /* Snapshot Images in Slides */
 .slide-snapshot {
-  max-height: 480px;
-  max-width: 92%;
+  max-height: 380px;
+  max-width: 90%;
   width: auto;
   border-radius: 8px;
   border: 1px solid rgba(56, 189, 248, 0.3);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  margin: 10px auto;
+  margin: 8px auto;
   display: block;
+}
+
+/* Slide Caption */
+.slide-caption {
+  font-size: 0.70em !important;
+  color: #cbd5e1 !important;
+  margin: 4px auto 0 auto !important;
+  line-height: 1.4 !important;
+}
+
+/* Navigation Prompts & Direction Hints */
+.nav-prompt {
+  font-size: 0.72em !important;
+  color: #38bdf8 !important;
+  font-weight: 500 !important;
+  margin-top: 10px !important;
+  margin-bottom: 0 !important;
+  letter-spacing: 0.02em !important;
 }
 
 /* Reveal Navigation Controls & Slide Number */
