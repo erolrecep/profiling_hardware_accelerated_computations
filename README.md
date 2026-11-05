@@ -150,6 +150,27 @@ The repository provides concrete, formatted expected terminal logs for all profi
 
 ---
 
+### 📸 Visual Profiler Gallery: What to Expect When Replicating
+
+To provide concrete visual guidance when replicating these benchmarks on your local workstation or cluster, here are reference snapshots of the profiler graphical interfaces:
+
+#### 1. Master Side-by-Side Comparison (Timeline vs. Micro-Kernel vs. Operator Graph)
+![Side-by-Side Profiler Comparison](telemetry/snapshots/snapshot_side_by_side_comparison.png)
+
+#### 2. NVIDIA Nsight Systems (`nsys`): Macro Timeline GUI
+![NVIDIA Nsight Systems Timeline](telemetry/snapshots/snapshot_nsys_timeline.png)
+*Notice the prominent red `cudaStreamSynchronize` stall bar and white GPU starvation bubbles between kernel dispatches.*
+
+#### 3. NVIDIA Nsight Compute (`ncu`): Micro-Kernel Dashboard
+![NVIDIA Nsight Compute Dashboard](telemetry/snapshots/snapshot_ncu_micro_dashboard.png)
+*Notice the critical red metric flagging **Warp Execution Efficiency at 14.28%** (27.5 idle threads per warp).*
+
+#### 4. PyTorch Profiler / Perfetto: Kineto Trace View
+![PyTorch Profiler Trace](telemetry/snapshots/snapshot_torch_profiler_trace.png)
+*Notice the massive red operator block representing **`aten::_local_scalar_dense` (265.4 ms)** blocking host CPU progress.*
+
+---
+
 ## Empirical Benchmarks & Profiling Case Studies
 
 ### Benchmark Summary Table

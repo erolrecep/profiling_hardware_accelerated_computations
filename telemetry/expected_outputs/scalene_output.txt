@@ -23,3 +23,4 @@ Indexed by: Python % | native % | system % | GPU % | Memory % | Line # and Code
 3. THE ACTION: Because Python % is > 80%, this loop is an ideal candidate for Numba JIT compilation (`@njit(parallel=True)`). 
    Applying `@njit` shifts execution from 84.6% Python to 99.8% Native C/LLVM, yielding a 1,530x speedup!
 ================================================================================
+

@@ -65,3 +65,4 @@ Issue Slots No Eligible [%]                                22.10%       (Down fr
 By using a 1D grid-stride loop, threads dynamically pick up the next coordinate, diffusing the 
 divergent workload across warps. Average active threads jumped from 4.5 to 21.9, slashing execution time in half!
 ================================================================================
+

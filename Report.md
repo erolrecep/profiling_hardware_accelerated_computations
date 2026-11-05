@@ -238,6 +238,22 @@ As high-performance computing clusters transition from **CUDA 12.x** (NVIDIA Hop
      $$\text{Nsight Systems (Macro-Timeline)} \longrightarrow \text{Nsight Compute (Micro-Kernel Counters)}$$
    - Concrete, annotated side-by-side terminal logs are provided in [`telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt`](telemetry/expected_outputs/nsys_cuda12_vs_cuda13.txt) and [`telemetry/expected_outputs/ncu_kernel_speed_of_light.txt`](telemetry/expected_outputs/ncu_kernel_speed_of_light.txt).
 
+### 4.5 Visual Profiler Gallery: Empirical GUI Artifacts
+
+To guide researchers and practitioners in identifying the exact visual patterns produced by each profiler, the empirical suite captures high-fidelity GUI artifacts:
+
+#### Master Side-by-Side Comparison (nsys vs. ncu vs. PyTorch)
+![Side-by-Side Profiler Comparison](telemetry/snapshots/snapshot_side_by_side_comparison.png)
+
+#### NVIDIA Nsight Systems Timeline (Macro View)
+![NVIDIA Nsight Systems Timeline](telemetry/snapshots/snapshot_nsys_timeline.png)
+
+#### NVIDIA Nsight Compute Micro-Kernel Dashboard
+![NVIDIA Nsight Compute Dashboard](telemetry/snapshots/snapshot_ncu_micro_dashboard.png)
+
+#### PyTorch Profiler / Perfetto Operator Trace
+![PyTorch Profiler Trace](telemetry/snapshots/snapshot_torch_profiler_trace.png)
+
 ---
 
 ## 5. Master Empirical Benchmark Matrix

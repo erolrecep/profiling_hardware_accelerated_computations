@@ -44,3 +44,4 @@ Self CUDA time total: 40.800ms
 By eliminating the per-iteration host check, `aten::_local_scalar_dense` vanishes completely.
 Execution time drops from 307.9ms to 63.8ms with zero hardware changes!
 ================================================================================
+

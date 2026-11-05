@@ -66,3 +66,4 @@ Nsight Systems Version: 2026.1+ (Enhanced Tile IR & Unified Cluster Tracking)
 2. Subsystem targets are explicitly printed (`SM / Global DRAM` vs `SM / Shared Tile`), making cache and memory stalls immediately obvious.
 3. NVLink and PCIe bus utilization percentages are reported directly without requiring manual math calculations.
 ================================================================================
+

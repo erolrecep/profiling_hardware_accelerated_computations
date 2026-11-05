@@ -11,7 +11,7 @@ NVCC := $(shell which nvcc 2>/dev/null)
 
 .PHONY: help setup test benchmark_gemm benchmark_mandelbrot benchmark_all \
         profile_torch profile_scalene profile_memray profile_nsys profile_ncu \
-        compile_cuda serve_presentation clean
+        compile_cuda serve_presentation snapshots clean
 
 help:
 	@echo "=========================================================================="
@@ -29,6 +29,7 @@ help:
 	@echo "  profile_ncu           - Run NVIDIA Nsight Compute micro-kernel & Roofline counters"
 	@echo "  compile_cuda          - Compile native CUDA C kernels with nvcc (if available)"
 	@echo "  serve_presentation    - Launch local HTTP server hosting Reveal.js presentation"
+	@echo "  snapshots             - Generate high-fidelity profiler GUI snapshots (PNG)"
 	@echo "  clean                 - Remove build artifacts, pycache, and temporary files"
 	@echo "=========================================================================="
 
@@ -83,6 +84,11 @@ ifdef NVCC
 else
 	@echo ">> Notice: nvcc compiler not found on PATH. CUDA C sources available in src/*/*.cu"
 endif
+
+snapshots:
+	@echo ">> Generating High-Resolution Profiler GUI Snapshots..."
+	$(PYTHON) scripts/generate_profiler_snapshots.py
+	@echo "✓ Profiler snapshots generated in presentation/images/snapshots/ and telemetry/snapshots/"
 
 serve_presentation:
 	@echo ">> Serving Reveal.js Keynote Presentation on http://localhost:8000/presentation/ ..."

@@ -24,3 +24,4 @@ Rank  Peak Memory  Total Memory  Allocations  Function Location
 2. In contrast, NumPy and PyTorch allocate a single contiguous block of memory (10.24 MB), eliminating all 262,000 malloc/free calls.
 3. THE ACTION: Use NumPy arrays or PyTorch tensors to keep data contiguous in memory and eliminate heap allocation churn.
 ================================================================================
+

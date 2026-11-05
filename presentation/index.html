@@ -315,113 +315,146 @@
 
       <!-- SLIDE 10: TOOL 1 (NSYS) -->
       <section>
-        <span class="badge-pill">Tool 1: NVIDIA nsys</span>
-        <h2>NVIDIA Nsight Systems (nsys)</h2>
-        <h3 style="font-size: 1.0em;">The System-Wide Drone Camera</h3>
+        <section>
+          <span class="badge-pill">Tool 1: NVIDIA nsys</span>
+          <h2>NVIDIA Nsight Systems (nsys)</h2>
+          <h3 style="font-size: 1.0em;">The System-Wide Drone Camera</h3>
 
-        <div class="card-grid-3">
-          <div class="step-card">
-            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
-            <pre><code class="language-bash">nsys profile \
+          <div class="card-grid-3">
+            <div class="step-card">
+              <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+              <pre><code class="language-bash">nsys profile \
   --trace=cuda,osrt \
   --stats=true \
   ./my_program</code></pre>
-            <p style="font-size: 0.75em; color: #94a3b8;">Captures host and GPU events into a timeline.</p>
-          </div>
-          <div class="step-card">
-            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
-            <div class="terminal-box" style="font-size: 0.65em;">
-              cudaStreamSync: <span class="highlight-red">68.4%</span><br>
-              cudaLaunchKernel: 24.1%<br>
-              cudaMemcpy (H2D): 7.2%
+              <p style="font-size: 0.75em; color: #94a3b8;">Captures host and GPU events into a timeline.</p>
             </div>
-            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">The CPU is waiting 68% of the time on the GPU!</p>
+            <div class="step-card">
+              <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+              <div class="terminal-box" style="font-size: 0.65em;">
+                cudaStreamSync: <span class="highlight-red">68.4%</span><br>
+                cudaLaunchKernel: 24.1%<br>
+                cudaMemcpy (H2D): 7.2%
+              </div>
+              <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">The CPU is waiting 68% of the time on the GPU!</p>
+            </div>
+            <div class="step-card">
+              <h4 style="color: #f87171;">🔴 3. FIX</h4>
+              <p style="font-size: 0.8em; line-height: 1.4;">
+                • Overlap memory copies with compute using CUDA streams.<br>
+                • Use <strong>CUDA Graphs</strong> to eliminate kernel launch bubbles.
+              </p>
+            </div>
           </div>
-          <div class="step-card">
-            <h4 style="color: #f87171;">🔴 3. FIX</h4>
-            <p style="font-size: 0.8em; line-height: 1.4;">
-              • Overlap memory copies with compute using CUDA streams.<br>
-              • Use <strong>CUDA Graphs</strong> to eliminate kernel launch bubbles.
-            </p>
-          </div>
-        </div>
-        <aside class="notes">
-          Nsight Systems shows you the big picture. If you see white gaps on the timeline, your GPU is idling while the CPU prepares data.
-        </aside>
+          <p style="font-size: 0.75em; color: #38bdf8; margin-top: 20px;">⬇️ Press DOWN (or click below) to view GUI Timeline Snapshot</p>
+          <aside class="notes">
+            Nsight Systems shows you the big picture. If you see white gaps on the timeline, your GPU is idling while the CPU prepares data.
+          </aside>
+        </section>
+        <section>
+          <span class="badge-pill">NVIDIA nsys GUI Snapshot</span>
+          <h3>Nsight Systems: Macro Timeline View</h3>
+          <img src="images/snapshots/snapshot_nsys_timeline.png" style="width: 88%; border-radius: 8px; border: 1px solid rgba(56,189,248,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.6);" alt="Nsight Systems Timeline Snapshot">
+          <p style="font-size: 0.72em; color: #cbd5e1; margin-top: 8px;">
+            Notice the <strong>red host-sync stall bar</strong> and <strong>white GPU idle bubbles</strong> on Stream 1 between kernel dispatches.
+          </p>
+        </section>
       </section>
 
       <!-- SLIDE 11: TOOL 2 (NCU) -->
       <section>
-        <span class="badge-pill">Tool 2: NVIDIA ncu</span>
-        <h2>NVIDIA Nsight Compute (ncu)</h2>
-        <h3 style="font-size: 1.0em;">The Kernel-Level Microscope</h3>
+        <section>
+          <span class="badge-pill">Tool 2: NVIDIA ncu</span>
+          <h2>NVIDIA Nsight Compute (ncu)</h2>
+          <h3 style="font-size: 1.0em;">The Kernel-Level Microscope</h3>
 
-        <div class="card-grid-3">
-          <div class="step-card">
-            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
-            <pre><code class="language-bash">ncu --section SpeedOfLight \
+          <div class="card-grid-3">
+            <div class="step-card">
+              <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+              <pre><code class="language-bash">ncu --section SpeedOfLight \
     --section WarpStateStats \
     ./my_program</code></pre>
-            <p style="font-size: 0.75em; color: #94a3b8;">Inspects hardware counters inside individual kernels.</p>
-          </div>
-          <div class="step-card">
-            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
-            <div class="terminal-box" style="font-size: 0.65em;">
-              Warp Efficiency: <span class="highlight-red">14.28%</span><br>
-              Avg Active Threads: <span class="highlight-red">4.5 / 32</span><br>
-              SM Throughput: 12.4%
+              <p style="font-size: 0.75em; color: #94a3b8;">Inspects hardware counters inside individual kernels.</p>
             </div>
-            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">27 out of 32 threads are sitting idle per warp!</p>
+            <div class="step-card">
+              <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+              <div class="terminal-box" style="font-size: 0.65em;">
+                Warp Efficiency: <span class="highlight-red">14.28%</span><br>
+                Avg Active Threads: <span class="highlight-red">4.5 / 32</span><br>
+                SM Throughput: 12.4%
+              </div>
+              <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">27 out of 32 threads are sitting idle per warp!</p>
+            </div>
+            <div class="step-card">
+              <h4 style="color: #f87171;">🔴 3. FIX</h4>
+              <p style="font-size: 0.8em; line-height: 1.4;">
+                • Convert 2D thread blocks to <strong>1D grid-stride loops</strong>.<br>
+                • Balance workloads across warps to jump from 14% to 68% efficiency!
+              </p>
+            </div>
           </div>
-          <div class="step-card">
-            <h4 style="color: #f87171;">🔴 3. FIX</h4>
-            <p style="font-size: 0.8em; line-height: 1.4;">
-              • Convert 2D thread blocks to <strong>1D grid-stride loops</strong>.<br>
-              • Balance workloads across warps to jump from 14% to 68% efficiency!
-            </p>
-          </div>
-        </div>
-        <aside class="notes">
-          Nsight Compute tells you what happens inside the kernel. A low warp efficiency means branch divergence is wasting GPU cycles.
-        </aside>
+          <p style="font-size: 0.75em; color: #38bdf8; margin-top: 20px;">⬇️ Press DOWN to view GUI Micro-Kernel Snapshot</p>
+          <aside class="notes">
+            Nsight Compute tells you what happens inside the kernel. A low warp efficiency means branch divergence is wasting GPU cycles.
+          </aside>
+        </section>
+        <section>
+          <span class="badge-pill">NVIDIA ncu GUI Snapshot</span>
+          <h3>Nsight Compute: Micro-Kernel Dashboard</h3>
+          <img src="images/snapshots/snapshot_ncu_micro_dashboard.png" style="width: 88%; border-radius: 8px; border: 1px solid rgba(56,189,248,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.6);" alt="Nsight Compute Dashboard Snapshot">
+          <p style="font-size: 0.72em; color: #cbd5e1; margin-top: 8px;">
+            The red warning bar flags <strong>Warp Execution Efficiency at 14.28%</strong> (only 4.5 active threads per warp).
+          </p>
+        </section>
       </section>
 
       <!-- SLIDE 12: TOOL 3 (PYTORCH PROFILER) -->
       <section>
-        <span class="badge-pill">Tool 3: PyTorch Profiler</span>
-        <h2>PyTorch Profiler (torch.profiler)</h2>
-        <h3 style="font-size: 1.0em;">The Deep Learning Framework Inspector</h3>
+        <section>
+          <span class="badge-pill">Tool 3: PyTorch Profiler</span>
+          <h2>PyTorch Profiler (torch.profiler)</h2>
+          <h3 style="font-size: 1.0em;">The Deep Learning Framework Inspector</h3>
 
-        <div class="card-grid-3">
-          <div class="step-card">
-            <h4 style="color: #4ade80;">🟢 1. RUN</h4>
-            <pre><code class="language-python">with profile(
+          <div class="card-grid-3">
+            <div class="step-card">
+              <h4 style="color: #4ade80;">🟢 1. RUN</h4>
+              <pre><code class="language-python">with profile(
   activities=[CPU, CUDA],
   record_shapes=True
 ) as prof:
     model(inputs)</code></pre>
-            <p style="font-size: 0.75em; color: #94a3b8;">Built directly into PyTorch.</p>
-          </div>
-          <div class="step-card">
-            <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
-            <div class="terminal-box" style="font-size: 0.62em;">
-              _local_scalar_dense: <span class="highlight-red">86.2%</span><br>
-              aten::where: 4.1%<br>
-              aten::mul: 3.2%
+              <p style="font-size: 0.75em; color: #94a3b8;">Built directly into PyTorch.</p>
             </div>
-            <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">One single scalar sync is stealing 86% of your execution time!</p>
+            <div class="step-card">
+              <h4 style="color: #fbbf24;">🟡 2. SPOT</h4>
+              <div class="terminal-box" style="font-size: 0.62em;">
+                _local_scalar_dense: <span class="highlight-red">86.2%</span><br>
+                aten::where: 4.1%<br>
+                aten::mul: 3.2%
+              </div>
+              <p style="font-size: 0.75em; color: #94a3b8; margin-top: 8px;">One single scalar sync is stealing 86% of your execution time!</p>
+            </div>
+            <div class="step-card">
+              <h4 style="color: #f87171;">🔴 3. FIX</h4>
+              <p style="font-size: 0.8em; line-height: 1.4;">
+                • Delete <code>.item()</code> or <code>if not mask.any()</code> inside loops.<br>
+                • Keep operations tensorized on device for an instant <strong>4.8x speedup</strong>!
+              </p>
+            </div>
           </div>
-          <div class="step-card">
-            <h4 style="color: #f87171;">🔴 3. FIX</h4>
-            <p style="font-size: 0.8em; line-height: 1.4;">
-              • Delete <code>.item()</code> or <code>if not mask.any()</code> inside loops.<br>
-              • Keep operations tensorized on device for an instant <strong>4.8x speedup</strong>!
-            </p>
-          </div>
-        </div>
-        <aside class="notes">
-          PyTorch Profiler is the most accessible tool for AI developers. Finding aten::_local_scalar_dense is an instant lightbulb moment for attendees.
-        </aside>
+          <p style="font-size: 0.75em; color: #38bdf8; margin-top: 20px;">⬇️ Press DOWN to view Perfetto Timeline Snapshot</p>
+          <aside class="notes">
+            PyTorch Profiler is the most accessible tool for AI developers. Finding aten::_local_scalar_dense is an instant lightbulb moment for attendees.
+          </aside>
+        </section>
+        <section>
+          <span class="badge-pill">Perfetto / Chrome Trace Snapshot</span>
+          <h3>PyTorch Profiler: Kineto Trace View</h3>
+          <img src="images/snapshots/snapshot_torch_profiler_trace.png" style="width: 88%; border-radius: 8px; border: 1px solid rgba(56,189,248,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.6);" alt="PyTorch Profiler Trace Snapshot">
+          <p style="font-size: 0.72em; color: #cbd5e1; margin-top: 8px;">
+            The massive red block highlights <strong>aten::_local_scalar_dense (265.4 ms)</strong> blocking CPU execution.
+          </p>
+        </section>
       </section>
 
       <!-- SLIDE 13: TOOL 4 (SCALENE) -->
@@ -527,16 +560,31 @@ make profile_nsys    # CUDA 12/13 trace</code></pre>
         </aside>
       </section>
 
-      <!-- SLIDE 16: SIDE-BY-SIDE OUTPUTS (CUDA 12 vs 13) -->
+      <!-- SLIDE 16: SIDE-BY-SIDE OUTPUTS (CUDA 12 vs 13 & VISUAL COMPARISON) -->
       <section>
-        <span class="badge-pill">Side-by-Side Outputs</span>
-        <h2>Terminal Telemetry: CUDA 12 vs. CUDA 13</h2>
-        <h3 style="font-size: 0.95em; color: #94a3b8;">Real Output from `nsys profile --stats=true`</h3>
+        <section>
+          <span class="badge-pill">Master Diagnostic Comparison</span>
+          <h2>Side-by-Side Profilers: What to Expect</h2>
+          <h3 style="font-size: 0.95em; color: #94a3b8;">System Timeline (nsys) vs Micro-Kernel (ncu) vs Framework (torch.profiler)</h3>
+          
+          <div style="margin-top: 15px;">
+            <img src="images/snapshots/snapshot_side_by_side_comparison.png" style="width: 88%; border-radius: 8px; border: 1px solid rgba(56,189,248,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.6);" alt="Side-by-Side Profiler GUI Comparison">
+          </div>
+          <p style="font-size: 0.72em; color: #38bdf8; margin-top: 12px;">⬇️ Press DOWN to view CUDA 12 vs. CUDA 13 CLI terminal tables</p>
+          <aside class="notes">
+            This slide gives attendees a single visual guide showing how the 3 primary tools fit together: Macro Timeline, Micro Kernel, and Framework Operator graph.
+          </aside>
+        </section>
 
-        <div class="side-by-side" style="margin-top: 15px;">
-          <div>
-            <div class="terminal-header">CUDA 12.x Output (Hopper / Ada)</div>
-            <div class="terminal-box">
+        <section>
+          <span class="badge-pill">Terminal Telemetry</span>
+          <h2>Terminal Telemetry: CUDA 12 vs. CUDA 13</h2>
+          <h3 style="font-size: 0.95em; color: #94a3b8;">Real Output from `nsys profile --stats=true`</h3>
+
+          <div class="side-by-side" style="margin-top: 15px;">
+            <div>
+              <div class="terminal-header">CUDA 12.x Output (Hopper / Ada)</div>
+              <div class="terminal-box">
 Time(%) Total Time(ns) Num Calls  Name<br>
 ------- -------------- ---------  -----------------------<br>
  <span class="highlight-red">68.4%</span>    152,410,290       500  cudaStreamSynchronize<br>
@@ -546,11 +594,11 @@ Time(%) Total Time(ns) Num Calls  Name<br>
 ** Kernel Summary **<br>
  71.2%     38,242,944       500  gemm_cuda_naive<br>
  28.8%     15,469,066       500  gemm_cuda_shared_tiled
+              </div>
             </div>
-          </div>
-          <div>
-            <div class="terminal-header">CUDA 13.x Output (Blackwell / Modern)</div>
-            <div class="terminal-box">
+            <div>
+              <div class="terminal-header">CUDA 13.x Output (Blackwell / Modern)</div>
+              <div class="terminal-box">
 Time(%) Duration(ms) Calls  Subsystem Target   Name<br>
 ------- ------------ -----  -----------------  -----------------------<br>
  <span class="highlight-red">64.2%</span>       142.180   500  [HOST STALL]       cudaStreamSynchronize<br>
@@ -560,18 +608,19 @@ Time(%) Duration(ms) Calls  Subsystem Target   Name<br>
 ** Workload Execution Summary **<br>
  73.5%        43.089   500  SM / Global DRAM   gemm_cuda_naive<br>
  26.5%        15.531   500  SM / Shared Tile   gemm_cuda_shared_tiled
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="card-box" style="margin-top: 12px; text-align: left; padding: 10px 16px;">
-          <p style="font-size: 0.8em;">
-            🔍 <strong>How to Read Both:</strong> In both versions, <strong>Line 1 is the smoking gun</strong>! <code>cudaStreamSynchronize</code> takes ~65-68% of time. Tiled shared memory kernel cuts GPU time by <strong>2.5x</strong> (from 38ms to 15ms).
-          </p>
-        </div>
-        <aside class="notes">
-          Walk through the side-by-side terminal boxes. Show how easy it is to spot the bottleneck in both versions.
-        </aside>
+          <div class="card-box" style="margin-top: 12px; text-align: left; padding: 10px 16px;">
+            <p style="font-size: 0.8em;">
+              🔍 <strong>How to Read Both:</strong> In both versions, <strong>Line 1 is the smoking gun</strong>! <code>cudaStreamSynchronize</code> takes ~65-68% of time. Tiled shared memory kernel cuts GPU time by <strong>2.5x</strong> (from 38ms to 15ms).
+            </p>
+          </div>
+          <aside class="notes">
+            Walk through the side-by-side terminal boxes. Show how easy it is to spot the bottleneck in both versions.
+          </aside>
+        </section>
       </section>
 
       <!-- SLIDE 17: PYTORCH SMOKING GUN -->
