@@ -29,6 +29,10 @@ dist/
 *.bin
 telemetry/torch_trace_*.json
 
+# SLURM execution logs
+slurm/logs/
+slurm/*.out
+
 # OS Artifacts
 .DS_Store
 Thumbs.db

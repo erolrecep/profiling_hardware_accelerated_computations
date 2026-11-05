@@ -98,5 +98,8 @@ clean:
 	@echo ">> Cleaning cache and temporary files..."
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
+	find . -type d -name "*.egg-info" -exec rm -rf {} +
+	find . -type f -name ".DS_Store" -delete
+	rm -f telemetry/*.bin telemetry/torch_trace_*.json
 	rm -f src/gemm/gemm_cuda src/mandelbrot/mandelbrot_cuda
 	@echo "✓ Clean complete."
