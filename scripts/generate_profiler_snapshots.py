@@ -529,26 +529,31 @@ def generate_nsys_comparison(output_path):
 # ==============================================================================
 def generate_side_by_side_comparison(output_path):
     """
-    Generates a master 3-panel side-by-side comparison infographic
-    with zero overlapping text, crisp typography, and strict coordinate budgeting.
+    Generates a master 3-panel side-by-side comparison infographic.
+    Crops the redundant duplicate header and removes the bottom banner
+    so the 3 primary tool cards are the clean, uncluttered focal point.
     """
-    fig, ax = plt.subplots(figsize=(16, 9.5), dpi=180)
+    fig, ax = plt.subplots(figsize=(16, 7.2), dpi=180)
     ax.set_xlim(0, 16)
-    ax.set_ylim(0, 9.5)
+    ax.set_ylim(0, 7.2)
     ax.axis("off")
 
-    draw_window_frame(ax, title="Master Profiler Suite: Side-by-Side Diagnostic Guidance", width=16, height=9.5)
-
-    # Sub-header bar
-    ax.add_patch(Rectangle((0, 8.25), 16, 0.60, facecolor="#151d2a", edgecolor=BORDER_COL, linewidth=0.8))
-    ax.text(0.6, 8.55, "Correlating System Timeline (nsys) vs Micro-Kernel Counters (ncu) vs Framework Operations (torch.profiler)",
-            color=TEXT_WHITE, fontsize=10, fontweight="bold", va="center")
-    ax.text(15.4, 8.55, "Universal Profiling Guide", color=CYAN_BLUE, fontsize=10, fontweight="bold", ha="right", va="center")
+    # Slim window frame
+    ax.add_patch(FancyBboxPatch((0, 0), 16, 7.2, boxstyle="round,pad=0.0,rounding_size=0.18",
+                                facecolor=BG_DARK, edgecolor=BORDER_COL, linewidth=1.8))
+    # Slim title bar
+    ax.add_patch(FancyBboxPatch((0, 6.70), 16, 0.50, boxstyle="round,pad=0.0,rounding_size=0.0",
+                                facecolor="#161e2e", edgecolor=BORDER_COL, linewidth=0.8))
+    for i, col in enumerate(["#ef4444", "#f59e0b", "#10b981"]):
+        circle = plt.Circle((0.45 + i * 0.30, 6.95), 0.09, color=col)
+        ax.add_patch(circle)
+    ax.text(8.0, 6.95, "Master Profiler Suite: Side-by-Side Tool Comparison (Timeline vs. Micro-Kernel vs. Operator Graph)",
+            color=TEXT_WHITE, fontsize=10.5, fontweight="bold", ha="center", va="center")
 
     # 3 Columns
-    col_w = 4.80
-    gap = 0.35
-    cols_x = [0.60, 0.60 + col_w + gap, 0.60 + 2 * (col_w + gap)]
+    col_w = 4.70
+    gap = 0.40
+    cols_x = [0.55, 0.55 + col_w + gap, 0.55 + 2 * (col_w + gap)]
 
     headers = [
         ("NVIDIA Nsight Systems (nsys)", "MACRO TIMELINE VIEW", CYAN_BLUE),
@@ -556,7 +561,7 @@ def generate_side_by_side_comparison(output_path):
         ("PyTorch Profiler (torch.profiler)", "FRAMEWORK OPERATOR GRAPH", PURPLE_ACC),
     ]
 
-    y_card = 2.05
+    y_card = 0.35
     h_card = 6.05
 
     for idx, (title, sub, color) in enumerate(headers):
@@ -575,112 +580,99 @@ def generate_side_by_side_comparison(output_path):
     # ==========================
     x1 = cols_x[0]
     # Section A: GUI Expectations
-    ax.text(x1 + 0.35, 7.15, "[*] WHAT TO EXPECT IN GUI:", color=TEXT_WHITE, fontsize=9.2, fontweight="bold")
-    ax.text(x1 + 0.35, 6.82, "• Horizontal bars across CPU & GPU streams", color="#cbd5e1", fontsize=8.5)
-    ax.text(x1 + 0.35, 6.54, "• Red API track: cudaStreamSynchronize stalls", color="#cbd5e1", fontsize=8.5)
-    ax.text(x1 + 0.35, 6.26, "• White gaps between kernels: GPU starvation", color="#cbd5e1", fontsize=8.5)
+    ax.text(x1 + 0.35, 5.45, "[*] WHAT TO EXPECT IN GUI:", color=TEXT_WHITE, fontsize=9.2, fontweight="bold")
+    ax.text(x1 + 0.35, 5.12, "• Horizontal bars across CPU & GPU streams", color="#cbd5e1", fontsize=8.5)
+    ax.text(x1 + 0.35, 4.84, "• Red API track: cudaStreamSynchronize stalls", color="#cbd5e1", fontsize=8.5)
+    ax.text(x1 + 0.35, 4.56, "• White gaps between kernels: GPU starvation", color="#cbd5e1", fontsize=8.5)
 
-    # Section B: Mockup Box (y: 4.55 to 5.95, height 1.40)
-    ax.add_patch(Rectangle((x1 + 0.35, 4.55), col_w - 0.70, 1.40, facecolor=BG_TRACK, edgecolor="#334155"))
-    ax.text(x1 + 0.55, 5.70, "CUDA API: cudaStreamSync [68.4% STALL]", color=RED_ALERT, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((x1 + 0.55, 5.32), 3.2, 0.28, facecolor=RED_ALERT, edgecolor="#b91c1c"))
+    # Section B: Mockup Box (y: 2.85 to 4.25, height 1.40)
+    ax.add_patch(Rectangle((x1 + 0.35, 2.85), col_w - 0.70, 1.40, facecolor=BG_TRACK, edgecolor="#334155"))
+    ax.text(x1 + 0.55, 4.00, "CUDA API: cudaStreamSync [68.4% STALL]", color=RED_ALERT, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((x1 + 0.55, 3.62), 3.1, 0.28, facecolor=RED_ALERT, edgecolor="#b91c1c"))
 
-    ax.text(x1 + 0.55, 4.98, "GPU Stream 1: [gemm]    [IDLE GAP]    [tiled]", color=TEXT_MUTED, fontsize=7.8)
-    ax.add_patch(Rectangle((x1 + 0.55, 4.66), 1.3, 0.24, facecolor=KERNEL_BLUE))
-    ax.add_patch(Rectangle((x1 + 1.95, 4.66), 1.2, 0.24, facecolor="none", edgecolor=RED_ALERT, linestyle="--", linewidth=1.2))
-    ax.add_patch(Rectangle((x1 + 3.25, 4.66), 0.75, 0.24, facecolor=NVIDIA_GREEN))
+    ax.text(x1 + 0.55, 3.28, "GPU Stream 1: [gemm]    [IDLE GAP]    [tiled]", color=TEXT_MUTED, fontsize=7.8)
+    ax.add_patch(Rectangle((x1 + 0.55, 2.96), 1.25, 0.24, facecolor=KERNEL_BLUE))
+    ax.add_patch(Rectangle((x1 + 1.90, 2.96), 1.20, 0.24, facecolor="none", edgecolor=RED_ALERT, linestyle="--", linewidth=1.2))
+    ax.add_patch(Rectangle((x1 + 3.20, 2.96), 0.75, 0.24, facecolor=NVIDIA_GREEN))
 
     # Section C: Replication Metric
-    ax.text(x1 + 0.35, 4.18, "[?] KEY REPLICATION METRIC:", color=AMBER_WARN, fontsize=9.2, fontweight="bold")
-    ax.text(x1 + 0.35, 3.88, "cudaStreamSynchronize > 50% Host Time", color="#fca5a5", fontsize=8.8, fontweight="bold")
+    ax.text(x1 + 0.35, 2.48, "[?] KEY REPLICATION METRIC:", color=AMBER_WARN, fontsize=9.2, fontweight="bold")
+    ax.text(x1 + 0.35, 2.18, "cudaStreamSynchronize > 50% Host Time", color="#fca5a5", fontsize=8.8, fontweight="bold")
 
     # Section D: Targeted Fix
-    ax.text(x1 + 0.35, 3.48, "[+] TARGETED ARCHITECTURAL FIX:", color=NVIDIA_GREEN, fontsize=9.0, fontweight="bold")
-    ax.text(x1 + 0.35, 3.18, "• Overlap H2D transfers with compute streams", color="#cbd5e1", fontsize=8.2)
-    ax.text(x1 + 0.35, 2.92, "• Use CUDA Graphs to batch kernel launches", color="#cbd5e1", fontsize=8.2)
+    ax.text(x1 + 0.35, 1.78, "[+] TARGETED ARCHITECTURAL FIX:", color=NVIDIA_GREEN, fontsize=9.0, fontweight="bold")
+    ax.text(x1 + 0.35, 1.48, "• Overlap H2D transfers with compute streams", color="#cbd5e1", fontsize=8.2)
+    ax.text(x1 + 0.35, 1.22, "• Use CUDA Graphs to batch kernel launches", color="#cbd5e1", fontsize=8.2)
 
     # Section E: Command Box
-    ax.add_patch(Rectangle((x1 + 0.35, 2.25), col_w - 0.70, 0.48, facecolor="#0e1726", edgecolor=BORDER_COL))
-    ax.text(x1 + 0.55, 2.49, "$ make profile_nsys", color=CYAN_BLUE, fontsize=9.2, fontweight="bold", family="monospace", va="center")
+    ax.add_patch(Rectangle((x1 + 0.35, 0.55), col_w - 0.70, 0.48, facecolor="#0e1726", edgecolor=BORDER_COL))
+    ax.text(x1 + 0.55, 0.79, "$ make profile_nsys", color=CYAN_BLUE, fontsize=9.2, fontweight="bold", family="monospace", va="center")
 
     # ==========================
     # COLUMN 2: NSIGHT COMPUTE
     # ==========================
     x2 = cols_x[1]
     # Section A: GUI Expectations
-    ax.text(x2 + 0.35, 7.15, "[*] WHAT TO EXPECT IN GUI:", color=TEXT_WHITE, fontsize=9.2, fontweight="bold")
-    ax.text(x2 + 0.35, 6.82, "• Speed of Light (SOL) percentage bar charts", color="#cbd5e1", fontsize=8.5)
-    ax.text(x2 + 0.35, 6.54, "• Warp Execution Efficiency percentage metric", color="#cbd5e1", fontsize=8.5)
-    ax.text(x2 + 0.35, 6.26, "• Active threads per warp and register limits", color="#cbd5e1", fontsize=8.5)
+    ax.text(x2 + 0.35, 5.45, "[*] WHAT TO EXPECT IN GUI:", color=TEXT_WHITE, fontsize=9.2, fontweight="bold")
+    ax.text(x2 + 0.35, 5.12, "• Speed of Light (SOL) percentage bar charts", color="#cbd5e1", fontsize=8.5)
+    ax.text(x2 + 0.35, 4.84, "• Warp Execution Efficiency percentage metric", color="#cbd5e1", fontsize=8.5)
+    ax.text(x2 + 0.35, 4.56, "• Active threads per warp and register limits", color="#cbd5e1", fontsize=8.5)
 
-    # Section B: Mockup Box (y: 4.55 to 5.95, height 1.40)
-    ax.add_patch(Rectangle((x2 + 0.35, 4.55), col_w - 0.70, 1.40, facecolor=BG_TRACK, edgecolor="#334155"))
-    ax.text(x2 + 0.55, 5.70, "Speed of Light: Compute 12.5% | Mem 4.1%", color=AMBER_WARN, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((x2 + 0.55, 5.32), col_w - 1.10, 0.24, facecolor="#1e2636"))
-    ax.add_patch(Rectangle((x2 + 0.55, 5.32), 0.55, 0.24, facecolor=RED_ALERT))
+    # Section B: Mockup Box (y: 2.85 to 4.25, height 1.40)
+    ax.add_patch(Rectangle((x2 + 0.35, 2.85), col_w - 0.70, 1.40, facecolor=BG_TRACK, edgecolor="#334155"))
+    ax.text(x2 + 0.55, 4.00, "Speed of Light: Compute 12.5% | Mem 4.1%", color=AMBER_WARN, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((x2 + 0.55, 3.62), col_w - 1.10, 0.24, facecolor="#1e2636"))
+    ax.add_patch(Rectangle((x2 + 0.55, 3.62), 0.55, 0.24, facecolor=RED_ALERT))
 
-    ax.text(x2 + 0.55, 4.98, "Warp Efficiency: 14.28% (4.5 / 32 active)", color=RED_ALERT, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((x2 + 0.55, 4.66), col_w - 1.10, 0.24, facecolor="#1e2636"))
-    ax.add_patch(Rectangle((x2 + 0.55, 4.66), 0.60, 0.24, facecolor=RED_ALERT))
+    ax.text(x2 + 0.55, 3.28, "Warp Efficiency: 14.28% (4.5 / 32 active)", color=RED_ALERT, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((x2 + 0.55, 2.96), col_w - 1.10, 0.24, facecolor="#1e2636"))
+    ax.add_patch(Rectangle((x2 + 0.55, 2.96), 0.60, 0.24, facecolor=RED_ALERT))
 
     # Section C: Replication Metric
-    ax.text(x2 + 0.35, 4.18, "[?] KEY REPLICATION METRIC:", color=AMBER_WARN, fontsize=9.2, fontweight="bold")
-    ax.text(x2 + 0.35, 3.88, "Warp Efficiency < 50% = Branch Divergence", color="#fca5a5", fontsize=8.8, fontweight="bold")
+    ax.text(x2 + 0.35, 2.48, "[?] KEY REPLICATION METRIC:", color=AMBER_WARN, fontsize=9.2, fontweight="bold")
+    ax.text(x2 + 0.35, 2.18, "Warp Efficiency < 50% = Branch Divergence", color="#fca5a5", fontsize=8.8, fontweight="bold")
 
     # Section D: Targeted Fix
-    ax.text(x2 + 0.35, 3.48, "[+] TARGETED ARCHITECTURAL FIX:", color=NVIDIA_GREEN, fontsize=9.0, fontweight="bold")
-    ax.text(x2 + 0.35, 3.18, "• Convert 2D blocks to 1D grid-stride loops", color="#cbd5e1", fontsize=8.2)
-    ax.text(x2 + 0.35, 2.92, "• Stage tile sub-matrices into Shared Memory", color="#cbd5e1", fontsize=8.2)
+    ax.text(x2 + 0.35, 1.78, "[+] TARGETED ARCHITECTURAL FIX:", color=NVIDIA_GREEN, fontsize=9.0, fontweight="bold")
+    ax.text(x2 + 0.35, 1.48, "• Convert 2D blocks to 1D grid-stride loops", color="#cbd5e1", fontsize=8.2)
+    ax.text(x2 + 0.35, 1.22, "• Stage tile sub-matrices into Shared Memory", color="#cbd5e1", fontsize=8.2)
 
     # Section E: Command Box
-    ax.add_patch(Rectangle((x2 + 0.35, 2.25), col_w - 0.70, 0.48, facecolor="#0e1726", edgecolor=BORDER_COL))
-    ax.text(x2 + 0.55, 2.49, "$ make profile_ncu", color=NVIDIA_GREEN, fontsize=9.2, fontweight="bold", family="monospace", va="center")
+    ax.add_patch(Rectangle((x2 + 0.35, 0.55), col_w - 0.70, 0.48, facecolor="#0e1726", edgecolor=BORDER_COL))
+    ax.text(x2 + 0.55, 0.79, "$ make profile_ncu", color=NVIDIA_GREEN, fontsize=9.2, fontweight="bold", family="monospace", va="center")
 
     # ==========================
     # COLUMN 3: PYTORCH PROFILER
     # ==========================
     x3 = cols_x[2]
     # Section A: GUI Expectations
-    ax.text(x3 + 0.35, 7.15, "[*] WHAT TO EXPECT IN GUI:", color=TEXT_WHITE, fontsize=9.2, fontweight="bold")
-    ax.text(x3 + 0.35, 6.82, "• Operator execution table sorted by Self CPU %", color="#cbd5e1", fontsize=8.5)
-    ax.text(x3 + 0.35, 6.54, "• JSON Perfetto timeline trace for Chrome UI", color="#cbd5e1", fontsize=8.5)
-    ax.text(x3 + 0.35, 6.26, "• Accidental host-device scalar synchronizations", color="#cbd5e1", fontsize=8.5)
+    ax.text(x3 + 0.35, 5.45, "[*] WHAT TO EXPECT IN GUI:", color=TEXT_WHITE, fontsize=9.2, fontweight="bold")
+    ax.text(x3 + 0.35, 5.12, "• Operator execution table sorted by Self CPU %", color="#cbd5e1", fontsize=8.5)
+    ax.text(x3 + 0.35, 4.84, "• JSON Perfetto timeline trace for Chrome UI", color="#cbd5e1", fontsize=8.5)
+    ax.text(x3 + 0.35, 4.56, "• Accidental host-device scalar synchronizations", color="#cbd5e1", fontsize=8.5)
 
-    # Section B: Mockup Box (y: 4.55 to 5.95, height 1.40)
-    ax.add_patch(Rectangle((x3 + 0.35, 4.55), col_w - 0.70, 1.40, facecolor=BG_TRACK, edgecolor="#334155"))
-    ax.text(x3 + 0.55, 5.70, "aten::_local_scalar_dense: 86.2% CPU", color=RED_ALERT, fontsize=8.5, fontweight="bold")
-    ax.add_patch(Rectangle((x3 + 0.55, 5.32), col_w - 1.10, 0.28, facecolor=RED_ALERT, edgecolor="#b91c1c"))
+    # Section B: Mockup Box (y: 2.85 to 4.25, height 1.40)
+    ax.add_patch(Rectangle((x3 + 0.35, 2.85), col_w - 0.70, 1.40, facecolor=BG_TRACK, edgecolor="#334155"))
+    ax.text(x3 + 0.55, 4.00, "aten::_local_scalar_dense: 86.2% CPU", color=RED_ALERT, fontsize=8.5, fontweight="bold")
+    ax.add_patch(Rectangle((x3 + 0.55, 3.62), col_w - 1.10, 0.28, facecolor=RED_ALERT, edgecolor="#b91c1c"))
 
-    ax.text(x3 + 0.55, 4.98, "GPU Ops: where (4.1%) | mul (3.2%) | add (2.5%)", color=TEXT_MUTED, fontsize=7.8)
-    ax.add_patch(Rectangle((x3 + 0.55, 4.66), 0.75, 0.24, facecolor="#0284c7"))
-    ax.add_patch(Rectangle((x3 + 1.40, 4.66), 0.65, 0.24, facecolor="#0284c7"))
-    ax.add_patch(Rectangle((x3 + 2.15, 4.66), 0.55, 0.24, facecolor="#0284c7"))
+    ax.text(x3 + 0.55, 3.28, "GPU Ops: where (4.1%) | mul (3.2%) | add (2.5%)", color=TEXT_MUTED, fontsize=7.8)
+    ax.add_patch(Rectangle((x3 + 0.55, 2.96), 0.75, 0.24, facecolor="#0284c7"))
+    ax.add_patch(Rectangle((x3 + 1.40, 2.96), 0.65, 0.24, facecolor="#0284c7"))
+    ax.add_patch(Rectangle((x3 + 2.15, 2.96), 0.55, 0.24, facecolor="#0284c7"))
 
     # Section C: Replication Metric
-    ax.text(x3 + 0.35, 4.18, "[?] KEY REPLICATION METRIC:", color=AMBER_WARN, fontsize=9.2, fontweight="bold")
-    ax.text(x3 + 0.35, 3.88, "_local_scalar_dense > 30% = Host Sync Leak", color="#fca5a5", fontsize=8.8, fontweight="bold")
+    ax.text(x3 + 0.35, 2.48, "[?] KEY REPLICATION METRIC:", color=AMBER_WARN, fontsize=9.2, fontweight="bold")
+    ax.text(x3 + 0.35, 2.18, "_local_scalar_dense > 30% = Host Sync Leak", color="#fca5a5", fontsize=8.8, fontweight="bold")
 
     # Section D: Targeted Fix
-    ax.text(x3 + 0.35, 3.48, "[+] TARGETED ARCHITECTURAL FIX:", color=NVIDIA_GREEN, fontsize=9.0, fontweight="bold")
-    ax.text(x3 + 0.35, 3.18, "• Delete .item() & if not mask.any() in loops", color="#cbd5e1", fontsize=8.2)
-    ax.text(x3 + 0.35, 2.92, "• Keep intermediate boolean masks in GPU VRAM", color="#cbd5e1", fontsize=8.2)
+    ax.text(x3 + 0.35, 1.78, "[+] TARGETED ARCHITECTURAL FIX:", color=NVIDIA_GREEN, fontsize=9.0, fontweight="bold")
+    ax.text(x3 + 0.35, 1.48, "• Delete .item() & if not mask.any() in loops", color="#cbd5e1", fontsize=8.2)
+    ax.text(x3 + 0.35, 1.22, "• Keep intermediate boolean masks in GPU VRAM", color="#cbd5e1", fontsize=8.2)
 
     # Section E: Command Box
-    ax.add_patch(Rectangle((x3 + 0.35, 2.25), col_w - 0.70, 0.48, facecolor="#0e1726", edgecolor=BORDER_COL))
-    ax.text(x3 + 0.55, 2.49, "$ make profile_torch", color=PURPLE_ACC, fontsize=9.2, fontweight="bold", family="monospace", va="center")
-
-    # ==========================
-    # BOTTOM SYNTHESIS BANNER
-    # ==========================
-    ax.add_patch(FancyBboxPatch((0.60, 0.35), 14.80, 1.45, boxstyle="round,pad=0.0,rounding_size=0.12",
-                                facecolor="#121722", edgecolor=BORDER_COL, linewidth=1.4))
-    ax.text(0.90, 1.48, "[GUIDE] THE UNIVERSAL REPLICATION STRATEGY:", color=CYAN_BLUE, fontsize=10.0, fontweight="bold")
-    ax.text(0.90, 1.18, "1. Macro Timeline (nsys / torch.profiler): Check for large red host-sync stall bars or white GPU idle bubbles on streams.",
-            color="#cbd5e1", fontsize=8.8)
-    ax.text(0.90, 0.90, "2. Micro-Kernel Counters (ncu): Inspect Speed of Light (SOL). Is compute low due to warp divergence (< 50% efficiency)?",
-            color="#cbd5e1", fontsize=8.8)
-    ax.text(0.90, 0.62, "3. Targeted Fix Verification: Apply the fix, rerun the tool, and confirm the red stall bar has vanished and hardware is saturated!",
-            color=NVIDIA_GREEN, fontsize=8.8, fontweight="bold")
+    ax.add_patch(Rectangle((x3 + 0.35, 0.55), col_w - 0.70, 0.48, facecolor="#0e1726", edgecolor=BORDER_COL))
+    ax.text(x3 + 0.55, 0.79, "$ make profile_torch", color=PURPLE_ACC, fontsize=9.2, fontweight="bold", family="monospace", va="center")
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=180, facecolor=BG_DARK, edgecolor="none")
