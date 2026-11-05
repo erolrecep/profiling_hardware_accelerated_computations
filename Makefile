@@ -8,17 +8,22 @@ VENV_DIR := .venv
 PYTHON := $(VENV_DIR)/bin/python
 PYTEST := $(VENV_DIR)/bin/pytest
 NVCC := $(shell which nvcc 2>/dev/null)
+PORT ?= 8000
 
-.PHONY: help setup test benchmark_gemm benchmark_mandelbrot benchmark_all \
+.PHONY: help setup test test-presentation test_presentation \
+        benchmark_gemm benchmark_mandelbrot benchmark_all \
         profile_torch profile_scalene profile_memray profile_nsys profile_ncu \
-        compile_cuda serve_presentation snapshots clean
+        compile_cuda present present-live serve_presentation snapshots clean
 
 help:
 	@echo "=========================================================================="
 	@echo "  Profiling Hardware Accelerated Computations - Build & Profiling Matrix"
 	@echo "=========================================================================="
 	@echo "  setup                 - Initialize Python virtual environment with uv and install dependencies"
-	@echo "  test                  - Run PyTest parity suite across all 6 backends"
+	@echo "  test                  - Run full verification suite (numerical parity & presentation assets)"
+	@echo "  test-presentation     - Validate presentation HTML, CSS, image paths, and Reveal.js DOM"
+	@echo "  present               - Launch presentation local server (no-cache, auto-opens browser, default port: 8000)"
+	@echo "  present-live          - Launch live-reload server (watches presentation/ and auto-refreshes browser)"
 	@echo "  benchmark_gemm        - Run unified GEMM benchmark (Python, Numba, Torch)"
 	@echo "  benchmark_mandelbrot  - Run unified Mandelbrot benchmark (Python, Numba, Torch)"
 	@echo "  benchmark_all         - Execute master scaling sweep and generate telemetry charts"
@@ -28,7 +33,6 @@ help:
 	@echo "  profile_nsys          - Run NVIDIA Nsight Systems system-wide timeline trace"
 	@echo "  profile_ncu           - Run NVIDIA Nsight Compute micro-kernel & Roofline counters"
 	@echo "  compile_cuda          - Compile native CUDA C kernels with nvcc (if available)"
-	@echo "  serve_presentation    - Launch local HTTP server hosting Reveal.js presentation"
 	@echo "  snapshots             - Generate high-fidelity profiler GUI snapshots (PNG)"
 	@echo "  clean                 - Remove build artifacts, pycache, and temporary files"
 	@echo "=========================================================================="
@@ -90,9 +94,21 @@ snapshots:
 	$(PYTHON) scripts/generate_profiler_snapshots.py
 	@echo "✓ Profiler snapshots generated in presentation/images/snapshots/ and telemetry/snapshots/"
 
-serve_presentation:
-	@echo ">> Serving Reveal.js Keynote Presentation on http://localhost:8000/presentation/ ..."
-	$(PYTHON) -m http.server 8000
+test-presentation:
+	@echo ">> Validating Presentation HTML, CSS, Snapshots & DOM Integrity..."
+	$(PYTEST) tests/test_presentation.py -v
+
+test_presentation: test-presentation
+
+present:
+	@echo ">> Launching local presentation server (PORT=$(PORT))..."
+	$(PYTHON) scripts/serve_presentation.py --port $(PORT)
+
+present-live:
+	@echo ">> Launching live-reload presentation server (PORT=$(PORT))..."
+	$(PYTHON) scripts/serve_presentation.py --port $(PORT) --live
+
+serve_presentation: present
 
 clean:
 	@echo ">> Cleaning cache and temporary files..."

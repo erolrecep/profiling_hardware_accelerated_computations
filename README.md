@@ -377,7 +377,10 @@ make setup
 
 | Command | Action Description | Output Artifacts |
 | :--- | :--- | :--- |
-| `make test` | Runs the automated PyTest numerical parity and escape verification suite. | Terminal PyTest status report |
+| `make test` | Runs the full verification suite: numerical parity and presentation assets. | Terminal PyTest status report |
+| `make test-presentation` | Validates presentation HTML, CSS syntax, image paths, and Reveal.js DOM. | PyTest asset validation report |
+| `make present` | Launches local presentation server with cache-busting and opens default browser. | `http://localhost:8000/` |
+| `make present-live` | Launches live-reload server (watches `presentation/` and auto-refreshes browser). | `http://localhost:8000/` |
 | `make benchmark_gemm` | Executes GEMM scaling benchmarks across all available runtimes. | Formatted Markdown table + telemetry |
 | `make benchmark_mandelbrot` | Executes Mandelbrot throughput benchmarks across all runtimes. | Formatted throughput metrics |
 | `make benchmark_all` | Runs full matrix & resolution sweeps and generates comparative graphs. | `telemetry/gemm_scaling.png`, `telemetry/mandelbrot_speedup.png` |
@@ -387,7 +390,6 @@ make setup
 | `make profile_nsys` | Profiles CUDA execution using NVIDIA Nsight Systems (HPC nodes). | `telemetry/nsys_gemm.nsys-rep` |
 | `make profile_ncu` | Profiles micro-architectural hardware metrics via NVIDIA Nsight Compute. | `telemetry/ncu_gemm.ncu-rep` |
 | `make compile_cuda` | Compiles native CUDA C kernels (`gemm_cuda.cu`, `mandelbrot_cuda.cu`). | `bin/gemm_cuda`, `bin/mandelbrot_cuda` |
-| `make serve_presentation` | Launches a local HTTP server hosting the 25-slide Reveal.js Keynote deck. | `http://localhost:8000/presentation/` |
 | `make snapshots` | Generates high-fidelity profiler GUI snapshots (PNG). | `presentation/images/snapshots/` |
 | `make clean` | Purges compiled binaries, transient trace dumps, and build caches. | Workspace cleaned |
 
@@ -527,17 +529,39 @@ The repository includes a 25-slide interactive presentation engineered in Reveal
 24. **Slide 24: Key Takeaways & Workshop Conclusion**
 25. **Slide 25: Questions & Answers (Q&A) & Interactive Discussion**
 
-### Viewing the Presentation
+### Viewing & Local Editing
+
 - **Online Deployment**: [https://erolrecep.github.io/profiling_hardware_accelerated_computations/](https://erolrecep.github.io/profiling_hardware_accelerated_computations/)
-- **Local Browser**: Open `presentation/index.html` directly, or run:
+- **Standard Local Server**:
   ```bash
-  make serve_presentation
+  make present
+  # Or specify a custom port:
+  make present PORT=8080
   ```
-- **Navigation Controls**:
-  - `Space` / `Right Arrow`: Advance slide
-  - `Left Arrow`: Previous slide
-  - `F`: Fullscreen mode
-  - `S`: Open Speaker Notes view with timing controls
+  *Features: Launches local HTTP server with automatic port detection, sets strict cache-busting headers (`no-cache`/`no-store`) so CSS/HTML edits apply immediately upon reload, and opens the default browser directly to `http://localhost:8000/`.*
+
+- **Live-Reload Watch Mode (Recommended for Editing)**:
+  ```bash
+  make present-live
+  ```
+  *Features: Continuously watches `presentation/` for file changes (HTML, CSS, images). As soon as you save any file (e.g. `presentation/css/theme.css` or `presentation/index.html`), connected browser tabs reload instantly without manual refreshes!*
+
+- **Automated Presentation Testing**:
+  ```bash
+  make test-presentation
+  ```
+  *Features: PyTest suite verifying that `index.html` structure is intact, all local images and snapshots exist and have valid PNG headers, all stylesheets exist and parse with balanced CSS braces, and Reveal.js DOM containers are properly configured.*
+
+- **Reveal.js Keyboard Shortcuts**:
+  | Key | Action |
+  | :--- | :--- |
+  | `SPACE` or `→` | Advance to the next slide |
+  | `←` | Return to previous slide |
+  | `S` | **Speaker View** (shows current slide, speaker notes, upcoming slide, and real-time timer) |
+  | `F` | Toggle Fullscreen mode |
+  | `O` or `ESC` | Slide Overview (zoom out into thumbnail grid for quick navigation) |
+  | `B` or `.` | Blank / pause screen |
+  | `?` | Show Reveal.js built-in help overlay |
 
 ---
 
