@@ -44,3 +44,4 @@ echo "==========================================================================
 echo "✓ Framework profiling complete."
 echo "  Traces saved to telemetry/torch_trace_*.json and telemetry/*.html"
 echo "=========================================================================="
+

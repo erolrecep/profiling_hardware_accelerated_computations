@@ -48,3 +48,4 @@ echo "All jobs submitted to SLURM queue!"
 echo "Monitor queue with:  squeue -u \$USER"
 echo "View job logs with:  tail -f slurm/logs/*.out"
 echo "=========================================================================="
+

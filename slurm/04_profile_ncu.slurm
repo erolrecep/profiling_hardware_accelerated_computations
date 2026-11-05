@@ -48,3 +48,4 @@ echo "==========================================================================
 echo "✓ ncu profiling complete. Reports saved to telemetry/*.ncu-rep"
 echo "  Download to local workstation and open with: ncu-ui <report>.ncu-rep"
 echo "=========================================================================="
+

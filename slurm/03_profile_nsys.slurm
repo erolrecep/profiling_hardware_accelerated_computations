@@ -48,3 +48,4 @@ echo "==========================================================================
 echo "✓ nsys profiling complete. Traces saved to telemetry/*.nsys-rep"
 echo "  Download to local workstation and open with: nsys-ui <trace>.nsys-rep"
 echo "=========================================================================="
+
