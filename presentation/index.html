@@ -177,7 +177,7 @@
           <div class="card-box">
             <h4>📦 The Concept</h4>
             <p>
-              Every cell in Matrix $C$ is computed by multiplying a row of $A$ by a column of $B$.<br><br>
+              Every cell in Matrix <strong>C</strong> is computed by multiplying a row of <strong>A</strong> by a column of <strong>B</strong>.<br><br>
               <strong>The Problem:</strong> Computer memory stores data in horizontal rows. Reading down a column jumps across memory like skipping steps on a staircase!
             </p>
           </div>
@@ -563,7 +563,7 @@ sbatch slurm/03_profile_nsys.slurm</code></pre>
 Open in Colab Badge
 # Free T4 / A100 GPU
 # nsys, ncu pre-installed!</code></pre>
-            <p style="color: #94a3b8;">Zero setup: test CUDA profiling in your browser for $0.</p>
+            <p style="color: #94a3b8;">Zero setup: test CUDA profiling in your browser for free.</p>
           </div>
         </div>
         <div class="card-box" style="margin-top: 15px; text-align: left;">
@@ -866,14 +866,14 @@ for (int i = tid; i < total_pixels; i += stride) {
           </thead>
           <tbody>
             <tr>
-              <td><strong>Pure Python ($i-j-k$)</strong></td>
+              <td><strong>Pure Python (i-j-k)</strong></td>
               <td>310.50 ms</td>
               <td>0.11 GFLOPS</td>
               <td><span style="color: #94a3b8;">1.0x</span></td>
               <td>Baseline unoptimized code</td>
             </tr>
             <tr>
-              <td><strong>Pure Python ($i-k-j$)</strong></td>
+              <td><strong>Pure Python (i-k-j)</strong></td>
               <td>37.95 ms</td>
               <td>0.88 GFLOPS</td>
               <td><span class="highlight-green">8.2x</span></td>
