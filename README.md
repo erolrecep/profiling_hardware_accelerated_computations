@@ -397,7 +397,7 @@ make setup
 
 ## SLURM Cluster Deployment (HPC Environments)
 
-For academic supercomputing clusters and SLURM workload managers (e.g. Rice University Center for Research Computing NOTS cluster, OLCF, or NERSC), the repository includes a complete suite of production SLURM submission scripts located in [`slurm/`](slurm/):
+For academic supercomputing clusters and SLURM workload managers (e.g. Rice University Center for Research Computing RANGE cluster, OLCF, or NERSC), the repository includes a complete suite of production SLURM submission scripts located in [`slurm/`](slurm/):
 
 | Script | Purpose & Scope | Target Hardware & Resources | Output Artifacts |
 | :--- | :--- | :--- | :--- |

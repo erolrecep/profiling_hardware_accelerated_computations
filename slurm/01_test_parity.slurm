@@ -22,7 +22,7 @@ echo "  Job ID: ${SLURM_JOB_ID} | Host: $(hostname)"
 echo "  Allocated GPU(s): ${CUDA_VISIBLE_DEVICES:-None}"
 echo "=========================================================================="
 
-# 1. Environment Module Loading (Compatible with Rice NOTS / SLURM Clusters)
+# 1. Environment Module Loading (Compatible with Rice RANGE / SLURM Clusters)
 if command -v module &> /dev/null; then
     echo ">> Loading environment modules..."
     module purge || true
