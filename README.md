@@ -28,16 +28,12 @@ Interactive Cloud Lab: [Open in Google Colab](https://colab.research.google.com/
    - [Visual Profiler Gallery: What to Expect When Replicating](#visual-profiler-gallery-what-to-expect-when-replicating)
 4. [Empirical Benchmarks & Profiling Case Studies](#empirical-benchmarks--profiling-case-studies)
 5. [The Systems Diagnostic Decision Tree](#the-systems-diagnostic-decision-tree)
-6. [Quick Start & Turnkey Makefile Reference](#quick-start--turnkey-makefile-reference)
+6. [Getting Started & Turnkey Makefile Reference](#getting-started--turnkey-makefile-reference)
 7. [SLURM Cluster Deployment (HPC Environments)](#slurm-cluster-deployment-hpc-environments)
 8. [Online Cloud GPU Testing Platforms: Replicate & Compare for Free](#online-cloud-gpu-testing-platforms-replicate--compare-for-free)
 9. [Automated Verification & Parity Testing](#automated-verification--parity-testing)
 10. [Workshop Presentation Deck (Reveal.js)](#workshop-presentation-deck-revealjs)
 11. [Author & Institutional Affiliation](#author--institutional-affiliation)
-6. [Quick Start & Turnkey Makefile Reference](#quick-start--turnkey-makefile-reference)
-7. [Automated Verification & Parity Testing](#automated-verification--parity-testing)
-8. [Workshop Presentation Deck (Reveal.js)](#workshop-presentation-deck-revealjs)
-9. [Author & Institutional Affiliation](#author--institutional-affiliation)
 
 ---
 
@@ -357,18 +353,23 @@ Is hardware utilization (GPU Core / CPU Core) < 80%?
 
 ---
 
-## Quick Start & Turnkey Makefile Reference
+## Getting Started & Turnkey Makefile Reference
 
-### Environment Prerequisites
+### 1. Environment Prerequisites
 - Python 3.12+ and `uv` package manager installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`).
 - Native C/CUDA compiler (`clang` on macOS; `gcc` and `nvcc` on Linux).
 
-### One-Command Setup
+### 2. Clone the Repository
 ```bash
 # Clone the repository
 git clone https://github.com/erolrecep/profiling_hardware_accelerated_computations.git
-cd profiling_hardware_accelerated_computations
 
+# Navigate into the project directory
+cd profiling_hardware_accelerated_computations
+```
+
+### 3. One-Command Setup
+```bash
 # Install virtual environment and dependencies via Makefile
 make setup
 ```
