@@ -959,6 +959,15 @@ memray flamegraph \
             <h2>Hands-On: Makefile, SLURM &amp; Cloud</h2>
             <p class="slide-subtitle">Run Locally, on HPC Clusters, or Free in Google Colab</p>
 
+            <div class="card-box"
+              style="margin-bottom: 12px; padding: 10px 16px; background: var(--rice-bg-light); border-left: 4px solid var(--rice-blue); display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+              <div style="font-weight: 700; font-size: 0.68em; color: var(--rice-blue); white-space: nowrap;">
+                📦 Clone Repository:
+              </div>
+              <pre tabindex="0" role="region" aria-label="Git clone repository command"
+                style="margin: 0; flex-grow: 1;"><code class="language-bash" style="padding: 6px 12px !important; font-size: 13px !important; max-height: none;">git clone https://github.com/erolrecep/profiling_hardware_accelerated_computations.git && cd profiling_hardware_accelerated_computations</code></pre>
+            </div>
+
             <div class="card-grid-3">
               <div class="step-card">
                 <h4 style="color: var(--badge-good-text);">💻 Local Workstation</h4>
@@ -979,14 +988,22 @@ sbatch slurm/03_profile_nsys.slurm</code></pre>
               </div>
               <div class="step-card">
                 <h4 style="color: var(--badge-purple-text);">☁️ Free Google Colab</h4>
-                <pre tabindex="0" role="region" aria-label="Google Colab interactive lab instructions"><code class="language-bash"># 1-Click Interactive Lab:
-Open in Colab Badge
-# Free T4 / A100 GPU
-# nsys, ncu pre-installed!</code></pre>
-                <p style="color: var(--rice-muted);">Zero setup: test CUDA profiling in your browser for free.</p>
+                <div style="margin: 6px 0;">
+                  <a href="https://colab.research.google.com/github/erolrecep/profiling_hardware_accelerated_computations/blob/main/notebooks/cuda_profiling_colab_workshop.ipynb"
+                    target="_blank" rel="noopener noreferrer"
+                    aria-label="Open workshop in Google Colab (opens in a new tab)">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab badge"
+                      style="display: block; margin: 4px 0 8px 0; border: none; box-shadow: none;" />
+                  </a>
+                </div>
+                <p style="color: var(--rice-muted); margin-top: 4px;">
+                  • Free T4 / A100 GPU in your browser<br>
+                  • <code>nsys</code> &amp; <code>ncu</code> pre-installed<br>
+                  • Zero local setup required
+                </p>
               </div>
             </div>
-            <div class="card-box" style="margin-top: 14px; text-align: left; background: var(--badge-info-bg);">
+            <div class="card-box" style="margin-top: 12px; text-align: left; background: var(--badge-info-bg);">
               <p style="margin: 0; color: var(--text-main);">
                 💡 <strong>Universal Reproducibility:</strong> You can replicate the exact profiling traces and compare your live output with our visual reference snapshots anywhere!
               </p>
