@@ -418,6 +418,41 @@ body,
   padding-bottom: 28px;
 }
 
+/* Clone Repository Banner */
+.clone-box {
+  margin-bottom: 12px;
+  padding: 10px 16px;
+  background: var(--rice-bg-light);
+  border-left: 4px solid var(--rice-blue);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.clone-box-label {
+  font-weight: 700;
+  font-size: 0.68em;
+  color: var(--rice-blue);
+  white-space: nowrap;
+}
+
+.clone-box pre {
+  margin: 0 !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
+  box-sizing: border-box;
+}
+
+.clone-box pre code {
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  max-height: none !important;
+}
+
 .rice-card,
 .card-box,
 .step-card {
